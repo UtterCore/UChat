@@ -56,11 +56,19 @@ public class ServerController {
 
         public volatile User user;
         public volatile User targetUser;
+
         Scanner inputScanner;
         PrintWriter out;
         InputStream is;
+        Socket socket;
+
+        long lastUpdate;
 
         private ServerThread(Socket socket) {
+            lastUpdate = System.currentTimeMillis();
+
+            this.socket = socket;
+
             try {
                 is = socket.getInputStream();
                 inputScanner = new Scanner(socket.getInputStream());
@@ -89,13 +97,10 @@ public class ServerController {
             return null;
         }
 
-        public void sendMessage(User sender, String message) {
-            out.print(sender.getUsername() + ": " + message);
-            out.flush();
-        }
         @Override
         public void run() {
             System.out.println("Thread run");
+
 
             if (user == null) {
                 readUserInfo();
@@ -103,34 +108,46 @@ public class ServerController {
 
             while (true) {
                 String input = getInput();
-                System.out.println(user.getUsername() + ": " + input);
 
-                if (input.contains("/connect")) {
-                    String parts[] = input.split(" ");
-                    if (findThreadByName(parts[1]) != null) {
-                        targetUser = findThreadByName(parts[1]).user;
-                    } else {
-                        sendMessage(serverUser, "No such user online :(");
-                    }
-                } else if (input.equals("/users")) {
-                    System.out.println("Received user request");
-                    if (userList.size() == 2) {
-                        sendMessage(serverUser, "No users online :(");
-                    } else {
-                        for (User onlineUser : userList) {
-                            if (onlineUser.getId() >= 0 && !onlineUser.getUsername().equals(user.getUsername())) {
-                                sendMessage(serverUser, onlineUser.getUsername());
+                    System.out.println(user.getUsername() + ": " + input);
+
+                    if (input.contains("/connect")) {
+                        String parts[] = input.split(" ");
+                        if (findThreadByName(parts[1]) != null) {
+                            targetUser = findThreadByName(parts[1]).user;
+                        } else {
+                            sendMessage(serverUser, "No such user online :(");
+                        }
+                    } else if (input.equals("/users")) {
+                        System.out.println("Received user request");
+                        if (userList.size() == 2) {
+                            sendMessage(serverUser, "No users online :(");
+                        } else {
+                            for (User onlineUser : userList) {
+                                if (onlineUser.getId() >= 0 && !onlineUser.getUsername().equals(user.getUsername())) {
+                                    sendMessage(serverUser, onlineUser.getUsername());
+                                }
                             }
                         }
-                    }
-                } else {
-                    if (targetUser != null) {
-                        findThreadByName(targetUser.getUsername()).sendMessage(user, input);
+                    } else if (input.equals("/disconnect") && targetUser != null) {
+                        sendMessage(serverUser, "Disconnected from " + targetUser.getUsername());
+                        targetUser = null;
+                    } else if (input.equals("/quit")) {
+                        userList.remove(user);
                     } else {
-                        sendMessage(serverUser, "No receiver. Connect using /connect [user]");
+                        if (targetUser != null) {
+                            findThreadByName(targetUser.getUsername()).sendMessage(user, input);
+                        } else {
+                            sendMessage(serverUser, "No receiver. Connect using /connect [user]");
+                        }
                     }
-                }
             }
+
+        }
+
+        public void sendMessage(User sender, String message) {
+            out.print(sender.getUsername() + ": " + message);
+            out.flush();
         }
     }
 }

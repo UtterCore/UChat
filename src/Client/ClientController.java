@@ -5,6 +5,9 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class ClientController {
 
@@ -13,8 +16,13 @@ public class ClientController {
     private boolean isConnected = false;
     private Socket sSocket;
     private PrintWriter writer;
+    private PrintWriter updateWriter;
     private InputThread inputThread;
+    private ScheduledExecutorService updaterExec;
 
+
+    public ClientController() {
+    }
     void handleInput(String input) {
 
         if (isConnected) {
@@ -44,6 +52,7 @@ public class ClientController {
 
         isConnected = true;
         writer = new PrintWriter(sSocket.getOutputStream());
+        updateWriter = new PrintWriter(sSocket.getOutputStream());
 
 
         inputThread = new InputThread(sSocket);
@@ -51,6 +60,8 @@ public class ClientController {
 
         sendUserInfo();
 
+        updaterExec = Executors.newScheduledThreadPool(1);
+        updaterExec.scheduleAtFixedRate(updateStatus, 0, 1, TimeUnit.SECONDS);
 
         return 1;
     }
@@ -73,6 +84,13 @@ public class ClientController {
     }
 
 
+    private Runnable updateStatus = new Runnable() {
+        @Override
+        public void run() {
+            //updateWriter.print("2:update");
+            //updateWriter.flush();
+        }
+    };
 
     private class InputThread extends Thread {
 
@@ -91,7 +109,6 @@ public class ClientController {
             while (true) {
                 String input = getInput();
                 System.out.println(input);
-
             }
         }
 

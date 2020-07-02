@@ -11,17 +11,29 @@ import java.util.concurrent.TimeUnit;
 public class ClientController {
 
 
+    private boolean shouldExit;
     private User user;
     private boolean isConnected = false;
     private Socket sSocket;
     private PrintWriter writer;
-    private PrintWriter updateWriter;
-    private InputThread inputThread;
-    private ScheduledExecutorService updaterExec;
-
 
     public ClientController() {
     }
+
+    private void quit() {
+        try {
+            sSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        isConnected = false;
+        writer.close();
+        shouldExit = true;
+    }
+    public boolean getShouldExit() {
+        return shouldExit;
+    }
+
     void handleInput(String input) {
 
         if (isConnected) {
@@ -33,7 +45,6 @@ public class ClientController {
                     System.out.println(getCommandList());
                 }
             }
-
         }
     }
 
@@ -41,29 +52,19 @@ public class ClientController {
         writer.print(user.getUsername());
         writer.flush();
     }
-    public int connectToServer() throws IOException {
-        System.out.println("Connecting to server");
-        sSocket = new Socket(InetAddress.getByName("2.249.12.98"), 4001);
-        //Socket = new Socket("192.168.1.70", 4001);
-
+    public void connectToServer(String address, int port) throws IOException {
+        System.out.println("Connecting to server...");
+        sSocket = new Socket(InetAddress.getByName(address), port);
         System.out.println("Connected");
-
 
         isConnected = true;
         writer = new PrintWriter(sSocket.getOutputStream());
-        updateWriter = new PrintWriter(sSocket.getOutputStream());
 
-
-        inputThread = new InputThread(sSocket);
-        inputThread.start();
+        new InputThread(sSocket).start();
 
         sendUserInfo();
-
-        updaterExec = Executors.newScheduledThreadPool(1);
-        updaterExec.scheduleAtFixedRate(updateStatus, 0, 1, TimeUnit.SECONDS);
-
-        return 1;
     }
+
     void createUser(String username) {
         user = new User(username, 0);
     }
@@ -82,15 +83,6 @@ public class ClientController {
                 "/quit - exits application\n");
     }
 
-
-    private Runnable updateStatus = new Runnable() {
-        @Override
-        public void run() {
-            //updateWriter.print("2:update");
-            //updateWriter.flush();
-        }
-    };
-
     private class InputThread extends Thread {
 
         InputStream is;
@@ -106,15 +98,16 @@ public class ClientController {
         public void run() {
 
             while (true) {
-                String input = null;
+                String input;
                 try {
                     input = SocketIO.getInput(is);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println("No response from server. Exit application.");
+                    quit();
+                    break;
                 }
                 System.out.println(input);
             }
         }
-
     }
 }

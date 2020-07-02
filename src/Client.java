@@ -5,6 +5,8 @@ import java.util.Scanner;
 
 public class Client {
 
+    public static final String IP_GLOBAL = "2.249.12.98";
+    public static final String IP_LOCAL = "192.168.1.70";
     public static void main(String args[]) {
 
         ClientController client = new ClientController();
@@ -23,15 +25,23 @@ public class Client {
         System.out.println(client.getCommandList());
 
         try {
-            client.connectToServer();
+            //try global
+            client.connectToServer(IP_LOCAL, 4001);
         } catch (ConnectException b) {
-            System.out.println("No response from the chat server.");
-            exit = true;
+            //try local
+
+            System.out.println("No response. Trying to access locally");
+            try {
+                client.connectToServer(IP_LOCAL, 4001);
+            } catch (IOException io) {
+                System.out.println("No response from the chat server. Shutting down.");
+                exit = true;
+            }
         } catch (IOException e) {
            // e.printStackTrace();
         }
 
-        while (!exit) {
+        while (!exit && !client.getShouldExit()) {
             //System.out.print("> ");
             if (input.hasNextLine()) {
                 client.handleInput(input.nextLine());

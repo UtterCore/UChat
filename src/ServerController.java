@@ -8,6 +8,9 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+
+
+
 public class ServerController {
 
     volatile ArrayList<User> userList;

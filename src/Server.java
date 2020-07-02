@@ -1,5 +1,3 @@
-package Server;
-
 import java.io.IOException;
 
 public class Server {
@@ -7,7 +5,7 @@ public class Server {
 
 
         try {
-            new ServerController().startServer();
+            new ServerController().startServer(4001);
         } catch (IOException e) {
             e.printStackTrace();
         }

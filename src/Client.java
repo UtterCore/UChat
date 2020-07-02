@@ -1,6 +1,6 @@
-package Client;
-
 import java.io.IOException;
+import java.net.BindException;
+import java.net.ConnectException;
 import java.util.Scanner;
 
 public class Client {
@@ -24,8 +24,11 @@ public class Client {
 
         try {
             client.connectToServer();
+        } catch (ConnectException b) {
+            System.out.println("No response from the chat server.");
+            exit = true;
         } catch (IOException e) {
-            e.printStackTrace();
+           // e.printStackTrace();
         }
 
         while (!exit) {

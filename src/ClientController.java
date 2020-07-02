@@ -1,10 +1,9 @@
-package Client;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.net.InetAddress;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.net.SocketException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -44,8 +43,8 @@ public class ClientController {
     }
     public int connectToServer() throws IOException {
         System.out.println("Connecting to server");
-        sSocket = new Socket("localhost", 4001);
-        //sSocket = new Socket("2.249.12.98", 4001);
+        sSocket = new Socket(InetAddress.getByName("2.249.12.98"), 4001);
+        //Socket = new Socket("192.168.1.70", 4001);
 
         System.out.println("Connected");
 
@@ -107,24 +106,14 @@ public class ClientController {
         public void run() {
 
             while (true) {
-                String input = getInput();
+                String input = null;
+                try {
+                    input = SocketIO.getInput(is);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 System.out.println(input);
             }
-        }
-
-        private String getInput() {
-            byte[] buffer = new byte[1024];
-            int read;
-            try {
-                while ((read = is.read(buffer)) != -1) {
-                    String input = new String(buffer, 0, read);
-                    return input;
-                    //hej
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
         }
 
     }

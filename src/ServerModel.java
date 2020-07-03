@@ -55,9 +55,11 @@ public class ServerModel {
 
     public String getUserListString(User user) {
         String userListString = "";
+        int i = 0;
         for (User onlineUser : userList) {
             if (onlineUser.getId() >= 0 && !onlineUser.getFullName().equals(user.getFullName())) {
-                userListString += onlineUser.getFullName() + "\n";
+                userListString += "#" + i + " " + onlineUser.getFullName() + "\n";
+                i++;
             }
         }
         return userListString;
@@ -241,7 +243,7 @@ public class ServerModel {
                         if (userList.size() == 2) {
                             sendChatMessage(serverUser, "No users online :(");
                         } else {
-                            sendChatMessage(serverUser, getUserListString(user));
+                            sendChatMessage(serverUser, "\n" + getUserListString(user));
                         }
                         break;
                     }
@@ -292,7 +294,6 @@ public class ServerModel {
 
         @Override
         public void run() {
-            System.out.println("Thread run");
 
 
             if (user == null) {

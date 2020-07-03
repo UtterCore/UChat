@@ -45,6 +45,10 @@ public class ClientModel {
 
     void handleInput(String input) {
 
+        if (writer == null) {
+            System.out.println("Server dead hehe");
+            return;
+        }
         writer.print(input);
         writer.flush();
     }

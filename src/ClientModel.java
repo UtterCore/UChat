@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.LinkedList;
@@ -17,6 +18,7 @@ public class ClientModel {
 
     public ClientModel() {
         incomingMessageQueue = new LinkedList<>();
+        incomingMessageQueue.add("Hello! Enter username: ");
     }
 
     public Queue<String> getIncomingMessageQueue() {
@@ -64,8 +66,30 @@ public class ClientModel {
         sendUserInfo();
     }
 
+    public boolean connectToChatServer(String globalAddress, String localAddress, int port) {
+        try {
+            //try global
+            connectToServer(globalAddress, port);
+        } catch (ConnectException b) {
+
+            //try local
+            incomingMessageQueue.add("No response. Trying to access locally");
+            try {
+                connectToServer(localAddress, port);
+            } catch (IOException io) {
+                incomingMessageQueue.add("No response from the chat server. Shutting down.");
+                return false;
+            }
+        } catch (IOException e) {
+            // e.printStackTrace();
+        }
+        return true;
+    }
+
     void createUser(String username) {
         user = new User(username, 0);
+        incomingMessageQueue.add("Welcome " + getUser().getUsername() + "!");
+        incomingMessageQueue.add(getCommandList());
     }
 
     public User getUser() {

@@ -15,6 +15,7 @@ public class ClientController {
 
     private static final String IP_GLOBAL = "2.249.12.98";
     private static final String IP_LOCAL = "192.168.1.70";
+    private static final int PORT = 4001;
 
     private ClientModel client;
     private Scanner input;
@@ -29,32 +30,10 @@ public class ClientController {
         outputThread.scheduleAtFixedRate(getOutput, 0, 50, TimeUnit.MILLISECONDS);
     }
 
-    private void sendWelcomeMessage() {
-        System.out.println("Hello! Enter username: ");
+    private void enterUsername() {
+
         if (input.hasNextLine()) {
             client.createUser(input.nextLine());
-        }
-
-        System.out.println("Welcome " + client.getUser().getUsername() + "!");
-        System.out.println(client.getCommandList());
-    }
-
-    private void connectToChatServer() {
-        try {
-            //try global
-            client.connectToServer(IP_LOCAL, 4001);
-        } catch (ConnectException b) {
-            //try local
-
-            System.out.println("No response. Trying to access locally");
-            try {
-                client.connectToServer(IP_LOCAL, 4001);
-            } catch (IOException io) {
-                System.out.println("No response from the chat server. Shutting down.");
-                exit = true;
-            }
-        } catch (IOException e) {
-            // e.printStackTrace();
         }
     }
 
@@ -77,6 +56,12 @@ public class ClientController {
         }
     }
 
+    public void startClient() {
+        enterUsername();
+        client.connectToChatServer(IP_LOCAL, IP_LOCAL, PORT);
+        getInput();
+    }
+
     private Runnable getOutput = new Runnable() {
 
         Queue<String> messageQueue;
@@ -94,15 +79,4 @@ public class ClientController {
             }
         }
     };
-
-    public void startClient() {
-
-        System.out.println("Client");
-
-        sendWelcomeMessage();
-
-        connectToChatServer();
-
-        getInput();
-    }
 }

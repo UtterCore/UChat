@@ -1,113 +1,108 @@
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Queue;
+import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class ClientController {
 
+    private static final String IP_GLOBAL = "2.249.12.98";
+    private static final String IP_LOCAL = "192.168.1.70";
 
-    private boolean shouldExit;
-    private User user;
-    private boolean isConnected = false;
-    private Socket sSocket;
-    private PrintWriter writer;
+    private ClientModel client;
+    private Scanner input;
+    private boolean exit;
+    private ScheduledExecutorService outputThread;
 
     public ClientController() {
+        client = new ClientModel();
+        input = new Scanner(System.in);
+        exit = false;
+        outputThread = Executors.newScheduledThreadPool(1);
+        outputThread.scheduleAtFixedRate(getOutput, 0, 50, TimeUnit.MILLISECONDS);
     }
 
-    private void quit() {
-        try {
-            sSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+    private void sendWelcomeMessage() {
+        System.out.println("Hello! Enter username: ");
+        if (input.hasNextLine()) {
+            client.createUser(input.nextLine());
         }
-        isConnected = false;
-        writer.close();
-        shouldExit = true;
-    }
-    public boolean getShouldExit() {
-        return shouldExit;
+
+        System.out.println("Welcome " + client.getUser().getUsername() + "!");
+        System.out.println(client.getCommandList());
     }
 
-    void handleInput(String input) {
+    private void connectToChatServer() {
+        try {
+            //try global
+            client.connectToServer(IP_LOCAL, 4001);
+        } catch (ConnectException b) {
+            //try local
 
-        if (isConnected) {
-            writer.print(input);
-            writer.flush();
-        } else {
-            switch (input) {
-                case "/commands": {
-                    System.out.println(getCommandList());
+            System.out.println("No response. Trying to access locally");
+            try {
+                client.connectToServer(IP_LOCAL, 4001);
+            } catch (IOException io) {
+                System.out.println("No response from the chat server. Shutting down.");
+                exit = true;
+            }
+        } catch (IOException e) {
+            // e.printStackTrace();
+        }
+    }
+
+    private void getInput() {
+        while (!exit && !client.getShouldExit()) {
+            if (input.hasNextLine()) {
+                String currentInput = input.nextLine();
+                client.handleInput(currentInput);
+
+                if (currentInput.equals("/quit")) {
+                    exit = true;
+                    client.setShouldExit(true);
+                    outputThread.shutdown();
+                    System.exit(0);
+
+                } else if (currentInput.equals("/commands")) {
+                    client.printCommands();
                 }
             }
         }
     }
 
-    private void sendUserInfo() {
-        writer.print(user.getUsername());
-        writer.flush();
-    }
-    public void connectToServer(String address, int port) throws IOException {
-        System.out.println("Connecting to server...");
-        sSocket = new Socket(InetAddress.getByName(address), port);
-        System.out.println("Connected");
+    private Runnable getOutput = new Runnable() {
 
-        isConnected = true;
-        writer = new PrintWriter(sSocket.getOutputStream());
-
-        new InputThread(sSocket).start();
-
-        sendUserInfo();
-    }
-
-    void createUser(String username) {
-        user = new User(username, 0);
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public String getCommandList() {
-        return("Commands:\n" +
-                "/commands - prints this list\n" +
-                "/users - prints a list of online users\n" +
-                "/connect [username] - attempts to start a chat with " +
-                "a user\n" +
-                "/disconnect - disconnects from a chat\n" +
-                "/quit - exits application\n");
-    }
-
-    private class InputThread extends Thread {
-
-        InputStream is;
-        private InputThread(Socket socket) {
-            try {
-                is = socket.getInputStream();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
+        Queue<String> messageQueue;
         @Override
         public void run() {
 
-            while (true) {
-                String input;
-                try {
-                    input = SocketIO.getInput(is);
-                } catch (IOException e) {
-                    System.out.println("No response from server. Exit application.");
-                    quit();
-                    break;
+            if (messageQueue == null) {
+                if (client.getIncomingMessageQueue() != null) {
+                    messageQueue = client.getIncomingMessageQueue();
                 }
-                System.out.println(input);
+            } else {
+                if (!messageQueue.isEmpty()) {
+                    System.out.println(messageQueue.poll());
+                }
             }
         }
+    };
+
+    public void startClient() {
+
+        System.out.println("Client");
+
+        sendWelcomeMessage();
+
+        connectToChatServer();
+
+        getInput();
     }
 }

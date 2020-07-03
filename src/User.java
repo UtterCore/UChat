@@ -13,7 +13,19 @@ public class User {
         return username;
     }
 
+    public String getFullName() {
+        if (id <= 0) {
+            return getUsername();
+        } else {
+            return getUsername() + "#" + getId();
+        }
+    }
+
     public int getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

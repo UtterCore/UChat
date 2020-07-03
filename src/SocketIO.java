@@ -19,7 +19,7 @@ public class SocketIO {
     }
 
     public static void sendMessage(int type, User sender, PrintWriter writer, String message) {
-        writer.print(sender.getUsername() + ": " + message);
+        writer.print(sender.getFullName() + ": " + message);
         writer.flush();
     }
 }

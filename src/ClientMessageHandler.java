@@ -33,7 +33,7 @@ public class ClientMessageHandler {
         switch (input) {
             case "clear": {
                 System.out.println("empty");
-                gui.emptyMessageArea();
+                gui.clearChat();
                 return true;
             }
             default: {

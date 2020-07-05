@@ -122,8 +122,11 @@ public class ServerModel {
         private void quit() {
 
             disconnectChat();
+
             updateAllLists();
+
             userList.remove(user);
+
 
             inputScanner.close();
             writer.close();

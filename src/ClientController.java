@@ -31,26 +31,48 @@ public class ClientController {
     private ScheduledExecutorService outputThread;
     private PDU_HANDLER pdu_handler;
 
-    private void guiSendMessage() {
-        String textAreaContent = gui.getEnterMessageArea().getText();
+    private class guiSendThread extends Thread {
 
-        if (textAreaContent.length() == 0) {
-            return;
+
+        @Override
+        public void run() {
+            String textAreaContent = gui.getEnterMessageArea().getText();
+
+            if (textAreaContent.length() == 0) {
+                return;
+            }
+
+            gui.emptyMessageArea();
+
+            //gui.getEnterMessageArea().setEnabled(false);
+            gui.getSendMessageButton().setEnabled(false);
+
+            gui.showConnectingMessage();
+            if (client.getUser() == null) {
+                if (client.connectToChatServer(textAreaContent, IP_LOCAL, IP_LOCAL, PORT)) {
+                    gui.showFullApp();
+
+                    gui.getEnterMessageArea().setEnabled(true);
+                    gui.getSendMessageButton().setEnabled(true);
+
+                } else {
+                    gui.showConnectionError();
+
+                    gui.getEnterMessageArea().setEnabled(true);
+                    gui.getSendMessageButton().setEnabled(true);
+                }
+            } else {
+                cmh.prepareAndSend(textAreaContent);
+                gui.printMessageInChat(client.getUser().getUsername() + ": " + textAreaContent + "\n");
+
+                gui.getEnterMessageArea().setEnabled(true);
+                gui.getSendMessageButton().setEnabled(true);
+            }
+
+            gui.emptyMessageArea();
         }
-        //System.out.println("Text: " + textAreaContent);
-
-        if (client.getUser() == null) {
-            client.createUser(textAreaContent);
-            client.connectToChatServer(IP_LOCAL, IP_LOCAL, PORT);
-            gui.showUsers();
-        } else {
-            cmh.prepareAndSend(textAreaContent);
-         }
-
-        //print back the message that you sent
-        gui.printMessageInChat(client.getUser().getUsername() + ": " + textAreaContent + "\n");
-        gui.emptyMessageArea();
     }
+
     public ClientController() {
         client = new ClientModel();
         input = new Scanner(System.in);
@@ -60,8 +82,7 @@ public class ClientController {
                 gui = new GUI();
             gui.getSendMessageButton().addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-
-                    guiSendMessage();
+                    new guiSendThread().start();
                 }
             } );
 
@@ -69,7 +90,7 @@ public class ClientController {
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    guiSendMessage();
+                    new guiSendThread().start();
                 }
             });
 
@@ -83,37 +104,7 @@ public class ClientController {
         outputThread.scheduleAtFixedRate(getOutput, 0, 50, TimeUnit.MILLISECONDS);
     }
 
-    private void enterUsername() {
 
-        if (input.hasNextLine()) {
-            client.createUser(input.nextLine());
-        }
-    }
-
-    private void getInput() {
-        while (!exit && !client.getShouldExit()) {
-            if (input.hasNextLine()) {
-                String currentInput = input.nextLine();
-                client.handleInput(currentInput);
-
-                if (currentInput.equals("/quit")) {
-                    exit = true;
-                    client.setShouldExit(true);
-                    outputThread.shutdown();
-                    System.exit(0);
-
-                } else if (currentInput.equals("/commands")) {
-                    client.printCommands();
-                }
-            }
-        }
-    }
-
-    public void startClient() {
-        //enterUsername();
-        //client.connectToChatServer(IP_LOCAL, IP_LOCAL, PORT);
-        //getInput();
-    }
 
     private void handlePDU(PDU pdu) {
 
@@ -165,12 +156,6 @@ public class ClientController {
                 if (!messageQueue.isEmpty()) {
                     PDU incomingPDU = pdu_handler.parse_pdu(messageQueue.poll());
                     handlePDU(incomingPDU);
-
-                    //System.out.println(newMessage);
-
-                    SwingUtilities.invokeLater(() -> {
-                    //    gui.printMessageInChat(newMessage + "\n");
-                    });
                 }
             }
         }

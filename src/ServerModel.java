@@ -114,9 +114,15 @@ public class ServerModel {
             }
         }
 
+        private void updateAllLists() {
+            for (ServerThread thread : serverThreads) {
+                thread.sendUserListPDU(getUserList());
+            }
+        }
         private void quit() {
 
             disconnectChat();
+            updateAllLists();
             userList.remove(user);
 
             inputScanner.close();
@@ -169,6 +175,21 @@ public class ServerModel {
             }
             SocketIO.sendPDU(getWriter(), chatInfoPDU);
             //SocketIO.sendMessage(SocketIO.TYPE_MESSAGE, from, getWriter(), message);
+        }
+
+        private void sendUserListPDU(ArrayList<User> userlist) {
+
+
+            ArrayList<String> userlistString = new ArrayList<>();
+            for (User user : userList) {
+                if (user != serverUser) { //do not show server in list
+                    userlistString.add(user.getFullName());
+                }
+            }
+
+            PDU userlistPDU = pdu_handler.create_userlist_pdu(userlistString);
+
+            SocketIO.sendPDU(getWriter(), userlistPDU);
         }
 
         private void disconnectChat() {
@@ -269,6 +290,7 @@ public class ServerModel {
                             sendChatMessage(serverUser, "No users online :(");
                         } else {
                             sendChatMessage(serverUser, "\n" + getUserListString(user));
+                            sendUserListPDU(getUserList());
                         }
                         break;
                     }
@@ -333,6 +355,7 @@ public class ServerModel {
 
             if (user == null) {
                 readUserInfo();
+                updateAllLists();
             }
 
             while (!exit) {
@@ -342,6 +365,7 @@ public class ServerModel {
                 } catch (IOException e) {
                     System.out.println("Error: No response from " +
                             user.getFullName() + ". Removing");
+                    updateAllLists();
                     disconnectChat();
                     userList.remove(user);
                 }

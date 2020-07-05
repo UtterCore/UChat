@@ -5,6 +5,7 @@
  * Description: Responsible for drawing upp the GUI.
  */
 
+import com.sun.org.apache.xml.internal.security.utils.JDKXPathAPI;
 import sun.misc.JavaLangAccess;
 
 import javax.imageio.ImageIO;
@@ -19,6 +20,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 
 public class GUI {
     private JFrame window;
@@ -26,6 +28,13 @@ public class GUI {
     private JScrollPane chatScrollpane;
     private JTextArea chatArea;
     private JTextField enterMessageArea;
+
+    private JPanel coverPanel;
+
+    private JPanel usersPanel;
+    private JTextArea usersArea;
+    private JScrollPane usersScrollpane;
+
     private JPanel chatPanel;
     private JPanel enterMessagePanel;
     private JPanel chattingWith;
@@ -37,16 +46,28 @@ public class GUI {
 
         window.setLayout(new BorderLayout());
 
-        window.setMinimumSize(new Dimension(450, 300));
+        window.setMinimumSize(new Dimension(550, 400));
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
+        coverPanel = new JPanel(new BorderLayout());
+        coverPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        usersPanel = new JPanel(new BorderLayout());
+        usersArea = new JTextArea();
+        usersScrollpane = new JScrollPane(usersArea);
+        usersScrollpane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        usersPanel.add(usersScrollpane, BorderLayout.CENTER);
+        usersArea.setPreferredSize(new Dimension(100, 300));
+        usersArea.setEditable(false);
+        usersArea.setWrapStyleWord(true);
+        usersArea.setLineWrap(true);
+        usersPanel.setVisible(false);
 
         chattingWith = new JPanel(new BorderLayout());
         chattingWith.setBorder(new EmptyBorder(10, 10, 10, 10));
         chattingWithLabel = new JLabel("");
         chattingWith.add(chattingWithLabel, BorderLayout.CENTER);
         chatPanel = new JPanel(new BorderLayout());
-        chatPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         chatArea = new JTextArea();
 
@@ -75,7 +96,9 @@ public class GUI {
         chatPanel.add(chatScrollpane, BorderLayout.CENTER);
         chatPanel.add(enterMessagePanel, BorderLayout.SOUTH);
 
-        window.add(chatPanel, BorderLayout.CENTER);
+        coverPanel.add(chatPanel, BorderLayout.CENTER);
+        coverPanel.add(usersPanel, BorderLayout.EAST);
+        window.add(coverPanel, BorderLayout.CENTER);
 
         window.pack();
         window.setLocationRelativeTo(null);
@@ -97,6 +120,23 @@ public class GUI {
         return window;
     }
 
+    public void showUsers() {
+        usersPanel.setVisible(true);
+        window.revalidate();
+    }
+
+    public void updateUserlist(ArrayList<String> userlist) {
+
+        usersArea.setText(null);
+        window.revalidate();
+
+        String userlistString = "";
+        for (String user : userlist) {
+            userlistString += user + "\n";
+        }
+
+        usersArea.setText(userlistString);
+    }
     public void emptyMessageArea() {
         enterMessageArea.setText(null);
 

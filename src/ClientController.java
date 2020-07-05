@@ -42,6 +42,7 @@ public class ClientController {
         if (client.getUser() == null) {
             client.createUser(textAreaContent);
             client.connectToChatServer(IP_LOCAL, IP_LOCAL, PORT);
+            gui.showUsers();
         } else {
             cmh.prepareAndSend(textAreaContent);
          }
@@ -140,6 +141,11 @@ public class ClientController {
                     gui.setChatPartnerLabel(chatInfoPdu.chatPartner);
                 }
                 break;
+            }
+
+            case 4: {
+                PDU_HANDLER.PDU_USERLIST userlistPdu = (PDU_HANDLER.PDU_USERLIST)pdu;
+                gui.updateUserlist(userlistPdu.usernames);
             }
         }
     }

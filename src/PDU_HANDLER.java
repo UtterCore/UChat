@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 
 public class PDU_HANDLER {
 
@@ -14,6 +15,10 @@ public class PDU_HANDLER {
     public PDU_CHATINFO create_chatinfo_pdu(String chatPartner) {
 
         return new PDU_CHATINFO(chatPartner);
+    }
+
+    public PDU_USERLIST create_userlist_pdu(ArrayList<String> userlist) {
+        return new PDU_USERLIST(userlist);
     }
 
     public PDU parse_pdu(String input) {
@@ -40,6 +45,16 @@ public class PDU_HANDLER {
 
                  //   System.out.println("ChatInfo pdu found");
                     return create_chatinfo_pdu(parts[1]);
+                }
+
+                case 4: {
+                    ArrayList<String> userlist = new ArrayList<>();
+
+                    for (int i = 2; i < parts.length; i++) {
+                        userlist.add(parts[i]);
+                    }
+
+                    return create_userlist_pdu(userlist);
                 }
                 default: {
                     System.out.println("Invalid pdu type??");
@@ -99,6 +114,28 @@ public class PDU_HANDLER {
         @Override
         public String toString() {
             return type + ";" + chatPartner;
+        }
+    }
+
+    public class PDU_USERLIST extends PDU {
+
+        public int nrOfUsers;
+        public ArrayList<String> usernames;
+
+        private PDU_USERLIST(ArrayList<String> usernames) {
+            type = 4;
+            this.nrOfUsers = usernames.size();
+            this.usernames = usernames;
+        }
+
+        @Override
+        public String toString() {
+            String userlistString = "";
+            for (String user : usernames) {
+                userlistString += user + ";";
+            }
+
+            return type + ";" + nrOfUsers + ";" + userlistString;
         }
     }
 

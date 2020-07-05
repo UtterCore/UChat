@@ -1,3 +1,3 @@
 public abstract class PDU {
-    int type;
+    public int type;
 }

@@ -14,15 +14,26 @@ public class ClientModel {
     private boolean isConnected = false;
     private Socket sSocket;
     private PrintWriter writer;
+    private PDU_HANDLER pdu_handler;
     volatile private Queue<String> incomingMessageQueue;
+    private String chatPartner;
 
     public ClientModel() {
+        pdu_handler = new PDU_HANDLER();
         incomingMessageQueue = new LinkedList<>();
-        incomingMessageQueue.add("Hello! Enter username: ");
+        incomingMessageQueue.add(pdu_handler.create_msg_pdu("Hello! Enter username: ", null).toString());
     }
 
     public Queue<String> getIncomingMessageQueue() {
         return incomingMessageQueue;
+    }
+
+    public String getChatPartner() {
+        return chatPartner;
+    }
+
+    public void setChatPartner(String chatPartner) {
+        this.chatPartner = chatPartner;
     }
 
     private void quit() {
@@ -58,9 +69,9 @@ public class ClientModel {
         writer.flush();
     }
     public void connectToServer(String address, int port) throws IOException {
-        incomingMessageQueue.add("Connecting to server...");
+        incomingMessageQueue.add(pdu_handler.create_msg_pdu("Connecting to server... ", null).toString());
         sSocket = new Socket(InetAddress.getByName(address), port);
-        incomingMessageQueue.add("Connected");
+        incomingMessageQueue.add(pdu_handler.create_msg_pdu("Connected", null).toString());
 
         isConnected = true;
         writer = new PrintWriter(sSocket.getOutputStream());
@@ -77,11 +88,11 @@ public class ClientModel {
         } catch (ConnectException b) {
 
             //try local
-            incomingMessageQueue.add("No response. Trying to access locally");
+            incomingMessageQueue.add(pdu_handler.create_msg_pdu("No response. Trying to access locally...", null).toString());
             try {
                 connectToServer(localAddress, port);
             } catch (IOException io) {
-                incomingMessageQueue.add("No response from the chat server. Shutting down.");
+                incomingMessageQueue.add(pdu_handler.create_msg_pdu("No response from the chat server. Shutting down.", null).toString());
                 return false;
             }
         } catch (IOException e) {
@@ -92,9 +103,10 @@ public class ClientModel {
 
     void createUser(String username) {
         user = new User(username, 0);
-        incomingMessageQueue.add("Welcome " + getUser().getUsername() + "!");
-        incomingMessageQueue.add(getCommandList());
+        incomingMessageQueue.add(pdu_handler.create_msg_pdu("Welcome " + getUser().getUsername() + "!", null).toString());
+        incomingMessageQueue.add(pdu_handler.create_msg_pdu(getCommandList(), null).toString());
     }
+
 
     public User getUser() {
         return user;
@@ -132,7 +144,7 @@ public class ClientModel {
                 try {
                     input = SocketIO.getInput(is);
                 } catch (IOException e) {
-                    incomingMessageQueue.add("No response from server. Exit application.");
+                    incomingMessageQueue.add(pdu_handler.create_msg_pdu("No response from the server. Exit application.", null).toString());
                     quit();
                     break;
                 }

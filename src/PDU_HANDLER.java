@@ -6,15 +6,99 @@ public class PDU_HANDLER {
         return new PDU_MESSAGE(message, sender);
     }
 
+    public PDU_COMMAND create_cmd_pdu(String command, String sender) {
+
+        return new PDU_COMMAND(command, sender);
+    }
+
+    public PDU_CHATINFO create_chatinfo_pdu(String chatPartner) {
+
+        return new PDU_CHATINFO(chatPartner);
+    }
+
+    public PDU parse_pdu(String input) {
+
+        String parts[] = input.split(";");
+        if (parts.length == 0 || parts.length == 1) {
+            System.out.println("Invalid pdu");
+            return null;
+        } else {
+
+            switch (Integer.parseInt(parts[0])) {
+                case 1: {
+                 //   System.out.println("Message pdu found");
+
+                    //create msg pdu
+
+                    return create_msg_pdu(parts[2], parts[1]);
+                }
+                case 2: {
+                   // System.out.println("Command pdu found");
+                    return create_cmd_pdu(parts[2], parts[1]);
+                }
+                case 3: {
+
+                 //   System.out.println("ChatInfo pdu found");
+                    return create_chatinfo_pdu(parts[1]);
+                }
+                default: {
+                    System.out.println("Invalid pdu type??");
+
+                    return null;
+                }
+            }
+        }
+    }
+
     public class PDU_MESSAGE extends PDU {
 
-        private String message;
-        private String sender;
+        public String message;
+        public String sender;
 
         private PDU_MESSAGE(String message, String sender) {
             type = 1;
+            if (sender == null) {
+                sender = " ";
+            }
             this.message = message;
             this.sender = sender;
+        }
+
+        @Override
+        public String toString() {
+            return type + ";" + sender + ";" + message;
+        }
+    }
+
+    public class PDU_COMMAND extends PDU {
+
+        public String command;
+        public String sender;
+
+        private PDU_COMMAND(String command, String sender) {
+            type = 2;
+            this.command = command;
+            this.sender = sender;
+        }
+
+        @Override
+        public String toString() {
+            return type + ";" + sender + ";" + command;
+        }
+    }
+
+    public class PDU_CHATINFO extends PDU {
+
+        public String chatPartner;
+
+        private PDU_CHATINFO(String chatPartner) {
+            type = 3;
+            this.chatPartner = chatPartner;
+        }
+
+        @Override
+        public String toString() {
+            return type + ";" + chatPartner;
         }
     }
 

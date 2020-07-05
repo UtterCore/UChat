@@ -86,6 +86,13 @@ public class GUI {
         new ButtonActivatorThread().start();
     }
 
+    public void setChatPartnerLabel(String chatPartner) {
+        if (chatPartner == null) {
+            chatPartner = "";
+        }
+        chattingWithLabel.setText(chatPartner);
+    }
+
     public JFrame getWindow() {
         return window;
     }

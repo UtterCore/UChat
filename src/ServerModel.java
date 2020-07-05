@@ -15,8 +15,10 @@ public class ServerModel {
     volatile ArrayList<ServerThread> serverThreads;
     User serverUser;
     ServerSocket serverSocket;
+    PDU_HANDLER pdu_handler;
 
     public ServerModel() {
+        pdu_handler = new PDU_HANDLER();
         serverUser = new User("Server", -1);
         userList = new ArrayList<>();
         serverThreads = new ArrayList<>();
@@ -153,7 +155,20 @@ public class ServerModel {
         }
 
         private void sendChatMessage(User from, String message) {
-            SocketIO.sendMessage(SocketIO.TYPE_MESSAGE, from, getWriter(), message);
+            PDU msgPdu = pdu_handler.create_msg_pdu(message, from.getFullName());
+            SocketIO.sendPDU(getWriter(), msgPdu);
+            //SocketIO.sendMessage(SocketIO.TYPE_MESSAGE, from, getWriter(), message);
+        }
+
+        private void sendChatInfoPDU(User from) {
+            PDU chatInfoPDU;
+            if (from == null) {
+                chatInfoPDU = pdu_handler.create_chatinfo_pdu("_null");
+            } else {
+                chatInfoPDU = pdu_handler.create_chatinfo_pdu(from.getFullName());
+            }
+            SocketIO.sendPDU(getWriter(), chatInfoPDU);
+            //SocketIO.sendMessage(SocketIO.TYPE_MESSAGE, from, getWriter(), message);
         }
 
         private void disconnectChat() {
@@ -167,6 +182,7 @@ public class ServerModel {
                 if (otherThread.targetUser == user) {
                     otherThread.sendChatMessage(serverUser, user.getFullName() +
                             " has left the chat");
+                    otherThread.sendChatInfoPDU(null);
                     otherThread.targetUser = null;
                 } else {
                     otherThread.sendChatMessage(serverUser, user.getFullName() +
@@ -174,6 +190,7 @@ public class ServerModel {
                 }
 
                 sendChatMessage(serverUser, "Disconnected from " + targetUser.getFullName());
+                sendChatInfoPDU(null);
                 targetUser = null;
             }
         }
@@ -201,6 +218,9 @@ public class ServerModel {
 
                 sendChatMessage(serverUser, "You are now connected to " +
                         targetUser.getFullName() + "!");
+
+                sendChatInfoPDU(otherUser);
+                otherThread.sendChatInfoPDU(user);
             } else {
                 sendChatMessage(serverUser, "Attempting to connect to " +
                         otherUser.getFullName() + ", please wait.");
@@ -287,11 +307,21 @@ public class ServerModel {
 
         void handleInput(String input) throws IllegalArgumentException {
             try {
-                if (input.startsWith("/")) {
-                    handleCommand(input.substring(1));
-                } else {
-                    handleMessaging(input);
+
+                PDU incomingPDU = pdu_handler.parse_pdu(input);
+
+                if (incomingPDU.type == 1) {
+                    PDU_HANDLER.PDU_MESSAGE messagePDU = (PDU_HANDLER.PDU_MESSAGE)incomingPDU;
+
+
+                    handleMessaging(messagePDU.message);
+
+                } else if (incomingPDU.type == 2) {
+                    PDU_HANDLER.PDU_COMMAND commandPDU = (PDU_HANDLER.PDU_COMMAND)incomingPDU;
+
+                    handleCommand(commandPDU.command);
                 }
+
             } catch (Exception e) {
                 throw new IllegalArgumentException("Invalid arguments");
             }

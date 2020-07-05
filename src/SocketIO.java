@@ -22,4 +22,9 @@ public class SocketIO {
         writer.print(sender.getFullName() + ": " + message);
         writer.flush();
     }
+
+    public static void sendPDU(PrintWriter writer, PDU pdu) {
+        writer.print(pdu.toString());
+        writer.flush();
+    }
 }

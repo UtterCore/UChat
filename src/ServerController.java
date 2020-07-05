@@ -27,6 +27,7 @@ public class ServerController {
         @Override
         public void run() {
             while (in.hasNextLine()) {
+
                 switch (in.nextLine()) {
                     case "/close": {
                         System.out.println("Closing server");

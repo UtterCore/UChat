@@ -29,6 +29,7 @@ public class ClientController {
     private Scanner input;
     private boolean exit;
     private ScheduledExecutorService outputThread;
+    private PDU_HANDLER pdu_handler;
 
     private void guiSendMessage() {
         String textAreaContent = gui.getEnterMessageArea().getText();
@@ -36,7 +37,7 @@ public class ClientController {
         if (textAreaContent.length() == 0) {
             return;
         }
-        System.out.println("Text: " + textAreaContent);
+        //System.out.println("Text: " + textAreaContent);
 
         if (client.getUser() == null) {
             client.createUser(textAreaContent);
@@ -52,6 +53,7 @@ public class ClientController {
     public ClientController() {
         client = new ClientModel();
         input = new Scanner(System.in);
+        pdu_handler = new PDU_HANDLER();
 
         SwingUtilities.invokeLater(() -> {
                 gui = new GUI();
@@ -112,6 +114,35 @@ public class ClientController {
         //getInput();
     }
 
+    private void handlePDU(PDU pdu) {
+
+        switch (pdu.type) {
+
+            case 1: {
+                PDU_HANDLER.PDU_MESSAGE msgPdu = (PDU_HANDLER.PDU_MESSAGE)pdu;
+
+                SwingUtilities.invokeLater(() -> {
+                    if (!msgPdu.sender.equals(" ")) {
+                        gui.printMessageInChat(msgPdu.sender + ": ");
+                    }
+                    gui.printMessageInChat(msgPdu.message + "\n");
+                });
+                break;
+            }
+            case 3: {
+                PDU_HANDLER.PDU_CHATINFO chatInfoPdu = (PDU_HANDLER.PDU_CHATINFO)pdu;
+
+                if (chatInfoPdu.chatPartner.equals("_null")) {
+                    gui.setChatPartnerLabel(null);
+                    client.setChatPartner(null);
+                } else {
+                    client.setChatPartner(chatInfoPdu.chatPartner);
+                    gui.setChatPartnerLabel(chatInfoPdu.chatPartner);
+                }
+                break;
+            }
+        }
+    }
 
 
     private Runnable getOutput = new Runnable() {
@@ -126,11 +157,13 @@ public class ClientController {
                 }
             } else {
                 if (!messageQueue.isEmpty()) {
-                    String newMessage = messageQueue.poll();
-                    System.out.println(newMessage);
+                    PDU incomingPDU = pdu_handler.parse_pdu(messageQueue.poll());
+                    handlePDU(incomingPDU);
+
+                    //System.out.println(newMessage);
 
                     SwingUtilities.invokeLater(() -> {
-                        gui.printMessageInChat(newMessage + "\n");
+                    //    gui.printMessageInChat(newMessage + "\n");
                     });
                 }
             }

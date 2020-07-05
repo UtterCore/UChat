@@ -5,9 +5,12 @@
  * Description: Responsible for drawing upp the GUI.
  */
 
+import sun.misc.JavaLangAccess;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
@@ -19,17 +22,14 @@ import java.net.URL;
 
 public class GUI {
     private JFrame window;
-    private JList<String> channelList;
-    private JTable programTable;
     private JButton sendMessageButton;
-    private JPanel tablePanel;
-    private boolean channelTableIsOpen;
     private JScrollPane chatScrollpane;
-    private JMenuItem menuItemUpdate;
     private JTextArea chatArea;
     private JTextField enterMessageArea;
     private JPanel chatPanel;
     private JPanel enterMessagePanel;
+    private JPanel chattingWith;
+    private JLabel chattingWithLabel;
 
 
     public GUI() {
@@ -40,7 +40,13 @@ public class GUI {
         window.setMinimumSize(new Dimension(450, 300));
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
+
+        chattingWith = new JPanel(new BorderLayout());
+        chattingWith.setBorder(new EmptyBorder(10, 10, 10, 10));
+        chattingWithLabel = new JLabel("");
+        chattingWith.add(chattingWithLabel, BorderLayout.CENTER);
         chatPanel = new JPanel(new BorderLayout());
+        chatPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         chatArea = new JTextArea();
 
@@ -58,12 +64,14 @@ public class GUI {
 
         sendMessageButton = new JButton("Send");
         enterMessagePanel = new JPanel(new BorderLayout());
+
         enterMessageArea = new JTextField();
         enterMessagePanel.add(enterMessageArea, BorderLayout.CENTER);
         enterMessagePanel.add(sendMessageButton, BorderLayout.EAST);
         //chatScrollpane.add(chatArea);
 
 
+        chatPanel.add(chattingWith, BorderLayout.NORTH);
         chatPanel.add(chatScrollpane, BorderLayout.CENTER);
         chatPanel.add(enterMessagePanel, BorderLayout.SOUTH);
 
@@ -72,6 +80,10 @@ public class GUI {
         window.pack();
         window.setLocationRelativeTo(null);
         window.setVisible(true);
+
+        enterMessageArea.grabFocus();
+
+        new ButtonActivatorThread().start();
     }
 
     public JFrame getWindow() {
@@ -98,5 +110,16 @@ public class GUI {
     public void printMessageInChat(String message) {
         chatArea.append(message);
         chatScrollpane.getVerticalScrollBar().setValue(chatScrollpane.getVerticalScrollBar().getMaximum());
+    }
+
+    private class ButtonActivatorThread extends Thread {
+        @Override
+        public void run() {
+            while (true) {
+                if (enterMessageArea.getText() != null) {
+                    sendMessageButton.setEnabled(enterMessageArea.getText().length() > 0);
+                }
+            }
+        }
     }
 }

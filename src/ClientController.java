@@ -25,21 +25,28 @@ public class ClientController {
 
     private ClientModel client;
     private GUI gui;
+    private ClientMessageHandler cmh;
     private Scanner input;
     private boolean exit;
     private ScheduledExecutorService outputThread;
 
     private void guiSendMessage() {
         String textAreaContent = gui.getEnterMessageArea().getText();
+
+        if (textAreaContent.length() == 0) {
+            return;
+        }
         System.out.println("Text: " + textAreaContent);
 
         if (client.getUser() == null) {
             client.createUser(textAreaContent);
             client.connectToChatServer(IP_LOCAL, IP_LOCAL, PORT);
         } else {
-            client.handleInput(textAreaContent);
-        }
-        gui.printMessageInChat(textAreaContent + "\n");
+            cmh.prepareAndSend(textAreaContent);
+         }
+
+        //print back the message that you sent
+        gui.printMessageInChat(client.getUser().getUsername() + ": " + textAreaContent + "\n");
         gui.emptyMessageArea();
     }
     public ClientController() {
@@ -63,6 +70,7 @@ public class ClientController {
                 }
             });
 
+            cmh = new ClientMessageHandler(client, gui);
         });
 
 

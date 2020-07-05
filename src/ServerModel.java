@@ -180,6 +180,11 @@ public class ServerModel {
 
         private void connectToUser(User otherUser) {
 
+            if (otherUser == user) {
+                sendChatMessage(serverUser, "You cannot chat with yourself!");
+                return;
+            }
+
             if (targetUser != null) {
                 disconnectChat();
             }

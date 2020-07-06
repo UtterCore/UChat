@@ -5,12 +5,15 @@ import java.util.Scanner;
 
 public class Client {
 
-    /* Client:
-    TODO: Skapa ett GUI till client (sist av allt)
-     */
-
     public static void main(String args[]) {
 
+        /*
+        TODO: Buttons for sending/reponding to chat requests
+        TODO: Friend list
+        TODO: Make outputqueue for server
+        TODO: Save chats locally (JSON)
+        TODO: (later) Save user data with SQL
+         */
         new ClientController();
     }
 }

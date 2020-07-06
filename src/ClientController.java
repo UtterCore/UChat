@@ -15,13 +15,55 @@ public class ClientController {
 
     private ClientModel client;
     private GUI gui;
-    private ClientMessageHandler cmh;
-    private Scanner input;
-    private boolean exit;
     private ScheduledExecutorService outputThread;
 
-    private class guiSendThread extends Thread {
+    public ClientController() {
+        client = new ClientModel();
 
+        SwingUtilities.invokeLater(() -> {
+            gui = new GUI();
+
+            gui.getSendMessageButton().addActionListener(new submitMessageListener());
+            gui.getEnterMessageArea().addActionListener(new submitMessageListener());
+        });
+
+        outputThread = Executors.newScheduledThreadPool(1);
+        outputThread.scheduleAtFixedRate(getOutput, 0, 50, TimeUnit.MILLISECONDS);
+    }
+
+    private void connect(String username) {
+        gui.getSendMessageButton().setEnabled(false);
+        gui.showConnectingMessage();
+
+        if (client.connectToChatServer(username, IP_LOCAL, IP_LOCAL, PORT)) {
+            gui.showFullApp();
+
+            gui.getEnterMessageArea().setEnabled(true);
+            gui.getSendMessageButton().setEnabled(true);
+
+        } else {
+            gui.showConnectionError();
+
+            gui.getEnterMessageArea().setEnabled(true);
+            gui.getSendMessageButton().setEnabled(true);
+        }
+
+        gui.emptyMessageArea();
+    }
+
+    private void sendMessage(String message) {
+        gui.getSendMessageButton().setEnabled(false);
+
+        ClientMessageHandler.prepareAndSend(client, message);
+        gui.printMessageInChat(client.getUser().getUsername() + ": " + message + "\n");
+
+        gui.getEnterMessageArea().setEnabled(true);
+        gui.getSendMessageButton().setEnabled(true);
+
+        gui.emptyMessageArea();
+    }
+
+    private class guiSendThread extends Thread {
 
         @Override
         public void run() {
@@ -31,34 +73,11 @@ public class ClientController {
                 return;
             }
 
-            gui.emptyMessageArea();
-
-            //gui.getEnterMessageArea().setEnabled(false);
-            gui.getSendMessageButton().setEnabled(false);
-
-            gui.showConnectingMessage();
             if (client.getUser() == null) {
-                if (client.connectToChatServer(textAreaContent, IP_LOCAL, IP_LOCAL, PORT)) {
-                    gui.showFullApp();
-
-                    gui.getEnterMessageArea().setEnabled(true);
-                    gui.getSendMessageButton().setEnabled(true);
-
-                } else {
-                    gui.showConnectionError();
-
-                    gui.getEnterMessageArea().setEnabled(true);
-                    gui.getSendMessageButton().setEnabled(true);
-                }
+                connect(textAreaContent);
             } else {
-                cmh.prepareAndSend(textAreaContent);
-                gui.printMessageInChat(client.getUser().getUsername() + ": " + textAreaContent + "\n");
-
-                gui.getEnterMessageArea().setEnabled(true);
-                gui.getSendMessageButton().setEnabled(true);
+                sendMessage(textAreaContent);
             }
-
-            gui.emptyMessageArea();
         }
     }
 
@@ -69,26 +88,6 @@ public class ClientController {
             new guiSendThread().start();
         }
     }
-
-    public ClientController() {
-        client = new ClientModel();
-        input = new Scanner(System.in);
-
-        SwingUtilities.invokeLater(() -> {
-                gui = new GUI();
-
-            gui.getSendMessageButton().addActionListener(new submitMessageListener());
-            gui.getEnterMessageArea().addActionListener(new submitMessageListener());
-
-            cmh = new ClientMessageHandler(client, gui);
-        });
-
-        exit = false;
-        outputThread = Executors.newScheduledThreadPool(1);
-        outputThread.scheduleAtFixedRate(getOutput, 0, 50, TimeUnit.MILLISECONDS);
-    }
-
-
 
     private void handlePDU(PDU pdu) {
 
@@ -128,7 +127,7 @@ public class ClientController {
 
     private Runnable getOutput = new Runnable() {
 
-        Queue<String> messageQueue;
+        Queue<PDU> messageQueue;
         @Override
         public void run() {
 
@@ -138,8 +137,7 @@ public class ClientController {
                 }
             } else {
                 if (!messageQueue.isEmpty()) {
-                    PDU incomingPDU = PduHandler.getInstance().parse_pdu(messageQueue.poll());
-                    handlePDU(incomingPDU);
+                    handlePDU(messageQueue.poll());
                 }
             }
         }

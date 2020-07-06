@@ -15,17 +15,20 @@ public class ClientModel {
     private User user;
     private Socket sSocket;
     private PrintWriter writer;
-    volatile private Queue<String> incomingMessageQueue;
+    volatile private Queue<PDU> incomingPDUQueue;
+    volatile private Queue<PDU> outgoingPDUQueue;
     private String chatPartner;
     private ScheduledExecutorService updateExec;
+    private ScheduledExecutorService outgoingThread;
 
     public ClientModel() {
-        incomingMessageQueue = new LinkedList<>();
-        incomingMessageQueue.add(PduHandler.getInstance().create_msg_pdu("Enter username: ", null).toString());
+        incomingPDUQueue = new LinkedList<>();
+        outgoingPDUQueue = new LinkedList<>();
+        incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("Enter username: ", null));
     }
 
-    public Queue<String> getIncomingMessageQueue() {
-        return incomingMessageQueue;
+    public Queue<PDU> getIncomingMessageQueue() {
+        return incomingPDUQueue;
     }
 
     public String getChatPartner() {
@@ -50,6 +53,7 @@ public class ClientModel {
             System.out.println("Server dead hehe");
             return;
         }
+
         writer.print(input);
         writer.flush();
     }
@@ -57,7 +61,7 @@ public class ClientModel {
     private void sendUserInfo() {
         PDU pdu = PduHandler.getInstance().create_chatinfo_pdu(getUser().getUsername());
 
-        SocketIO.sendPDU(writer, pdu);
+        enqueuePDU(pdu);
     }
 
     public void connectToServer(String address, int port) throws IOException {
@@ -82,11 +86,11 @@ public class ClientModel {
         } catch (ConnectException b) {
 
             //try local
-            incomingMessageQueue.add(PduHandler.getInstance().create_msg_pdu("No response. Trying to access locally...", null).toString());
+            incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("No response. Trying to access locally...", null));
             try {
                 connectToServer(localAddress, port);
             } catch (IOException io) {
-                incomingMessageQueue.add(PduHandler.getInstance().create_msg_pdu("No response from the chat server. Shutting down.", null).toString());
+                incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("No response from the chat server. Shutting down.", null));
                 user = null;
                 return false;
             }
@@ -95,13 +99,17 @@ public class ClientModel {
         }
 
         updateExec = Executors.newScheduledThreadPool(1);
-        updateExec.scheduleAtFixedRate(updater, 500, 1000, TimeUnit.MILLISECONDS);
+        updateExec.scheduleAtFixedRate(updater, 0, 1000, TimeUnit.MILLISECONDS);
+
+        outgoingThread = Executors.newScheduledThreadPool(1);
+        outgoingThread.scheduleAtFixedRate(outputThread, 0, 10, TimeUnit.MILLISECONDS);
+
         return true;
     }
 
     private void createUser(String username) {
         user = new User(username, 0);
-        incomingMessageQueue.add(PduHandler.getInstance().create_msg_pdu(getCommandList(), null).toString());
+        incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu(getCommandList(), null));
     }
 
 
@@ -118,6 +126,10 @@ public class ClientModel {
                 "/disconnect - disconnects from a chat\n");
     }
 
+    public void enqueuePDU(PDU pdu) {
+        outgoingPDUQueue.add(pdu);
+    }
+
     private class InputThread extends Thread {
 
         InputStream is;
@@ -128,7 +140,6 @@ public class ClientModel {
                 e.printStackTrace();
             }
         }
-
         @Override
         public void run() {
 
@@ -137,22 +148,36 @@ public class ClientModel {
                 try {
                     input = SocketIO.getInput(is);
                 } catch (IOException e) {
-                    incomingMessageQueue.add(PduHandler.getInstance().create_msg_pdu("No response from the server. Exit application.", null).toString());
+                    incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("No response from the server. Exit application.", null));
                     quit();
                     break;
                 }
-                incomingMessageQueue.add(input);
+                incomingPDUQueue.add(PduHandler.getInstance().parse_pdu(input));
             }
         }
     }
 
-    private Runnable updater = new Runnable() {
+    private Runnable outputThread = new Runnable() {
 
+        @Override
+        public void run() {
+
+            if (!outgoingPDUQueue.isEmpty()) {
+                if (writer == null) {
+                    System.out.println("Server dead?");
+                    return;
+                }
+                SocketIO.sendPDU(writer, outgoingPDUQueue.poll());
+            }
+        }
+    };
+
+    private Runnable updater = new Runnable() {
         private void sendUserlistRequestPDU() {
 
             PduHandler.PDU_USERLIST_REQUEST pdu =
                     PduHandler.getInstance().create_userlist_requeust_pdu(getUser().getFullName());
-            SocketIO.sendPDU(writer, pdu);
+            enqueuePDU(pdu);
         }
         @Override
         public void run() {

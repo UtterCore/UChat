@@ -5,9 +5,6 @@ import java.net.SocketException;
 
 public class SocketIO {
 
-    public static final int TYPE_MESSAGE = 1;
-    public static final int TYPE_UPDATE = 2;
-
     public static String getInput(InputStream is) throws IOException {
         byte[] buffer = new byte[1024];
         int read;
@@ -16,11 +13,6 @@ public class SocketIO {
                 return input;
             }
         return null;
-    }
-
-    public static void sendMessage(int type, User sender, PrintWriter writer, String message) {
-        writer.print(sender.getFullName() + ": " + message);
-        writer.flush();
     }
 
     public static void sendPDU(PrintWriter writer, PDU pdu) {

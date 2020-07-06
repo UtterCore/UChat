@@ -9,10 +9,10 @@ import java.util.Scanner;
 public class ServerModel {
 
 
-    volatile ArrayList<User> userList;
-    volatile ArrayList<ServerThread> serverThreads;
-    User serverUser;
-    ServerSocket serverSocket;
+    volatile private ArrayList<User> userList;
+    volatile private ArrayList<ServerThread> serverThreads;
+    private User serverUser;
+    private ServerSocket serverSocket;
 
     public ServerModel() {
         serverUser = new User("Server", -1);

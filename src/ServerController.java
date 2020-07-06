@@ -4,7 +4,7 @@ import java.util.Scanner;
 
 public class ServerController {
 
-    ServerModel server;
+    private ServerModel server;
     public ServerController() {
         new ServerInputThread().start();
         server = new ServerModel();

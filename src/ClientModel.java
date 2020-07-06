@@ -6,20 +6,22 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class ClientModel {
 
     private User user;
     private Socket sSocket;
     private PrintWriter writer;
-    private PDU_HANDLER pdu_handler;
     volatile private Queue<String> incomingMessageQueue;
     private String chatPartner;
+    private ScheduledExecutorService updateExec;
 
     public ClientModel() {
-        pdu_handler = new PDU_HANDLER();
         incomingMessageQueue = new LinkedList<>();
-        incomingMessageQueue.add(pdu_handler.create_msg_pdu("Enter username: ", null).toString());
+        incomingMessageQueue.add(PduHandler.getInstance().create_msg_pdu("Enter username: ", null).toString());
     }
 
     public Queue<String> getIncomingMessageQueue() {
@@ -53,9 +55,11 @@ public class ClientModel {
     }
 
     private void sendUserInfo() {
-        writer.print(user.getUsername());
-        writer.flush();
+        PDU pdu = PduHandler.getInstance().create_chatinfo_pdu(getUser().getUsername());
+
+        SocketIO.sendPDU(writer, pdu);
     }
+
     public void connectToServer(String address, int port) throws IOException {
       //  incomingMessageQueue.add(pdu_handler.create_msg_pdu("Connecting to server... ", null).toString());
         sSocket = new Socket(InetAddress.getByName(address), port);
@@ -78,24 +82,26 @@ public class ClientModel {
         } catch (ConnectException b) {
 
             //try local
-            incomingMessageQueue.add(pdu_handler.create_msg_pdu("No response. Trying to access locally...", null).toString());
+            incomingMessageQueue.add(PduHandler.getInstance().create_msg_pdu("No response. Trying to access locally...", null).toString());
             try {
                 connectToServer(localAddress, port);
             } catch (IOException io) {
-                incomingMessageQueue.add(pdu_handler.create_msg_pdu("No response from the chat server. Shutting down.", null).toString());
+                incomingMessageQueue.add(PduHandler.getInstance().create_msg_pdu("No response from the chat server. Shutting down.", null).toString());
                 user = null;
                 return false;
             }
         } catch (IOException e) {
             // e.printStackTrace();
         }
+
+        updateExec = Executors.newScheduledThreadPool(1);
+        updateExec.scheduleAtFixedRate(updater, 500, 1000, TimeUnit.MILLISECONDS);
         return true;
     }
 
-    void createUser(String username) {
+    private void createUser(String username) {
         user = new User(username, 0);
-     //   incomingMessageQueue.add(pdu_handler.create_msg_pdu("Welcome " + getUser().getUsername() + "!", null).toString());
-        incomingMessageQueue.add(pdu_handler.create_msg_pdu(getCommandList(), null).toString());
+        incomingMessageQueue.add(PduHandler.getInstance().create_msg_pdu(getCommandList(), null).toString());
     }
 
 
@@ -131,7 +137,7 @@ public class ClientModel {
                 try {
                     input = SocketIO.getInput(is);
                 } catch (IOException e) {
-                    incomingMessageQueue.add(pdu_handler.create_msg_pdu("No response from the server. Exit application.", null).toString());
+                    incomingMessageQueue.add(PduHandler.getInstance().create_msg_pdu("No response from the server. Exit application.", null).toString());
                     quit();
                     break;
                 }
@@ -139,4 +145,19 @@ public class ClientModel {
             }
         }
     }
+
+    private Runnable updater = new Runnable() {
+
+        private void sendUserlistRequestPDU() {
+
+            PduHandler.PDU_USERLIST_REQUEST pdu =
+                    PduHandler.getInstance().create_userlist_requeust_pdu(getUser().getFullName());
+            SocketIO.sendPDU(writer, pdu);
+        }
+        @Override
+        public void run() {
+
+            sendUserlistRequestPDU();
+        }
+    };
 }

@@ -1,5 +1,3 @@
-import com.sun.javaws.exceptions.InvalidArgumentException;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -15,10 +13,8 @@ public class ServerModel {
     volatile ArrayList<ServerThread> serverThreads;
     User serverUser;
     ServerSocket serverSocket;
-    PDU_HANDLER pdu_handler;
 
     public ServerModel() {
-        pdu_handler = new PDU_HANDLER();
         serverUser = new User("Server", -1);
         userList = new ArrayList<>();
         serverThreads = new ArrayList<>();
@@ -123,8 +119,6 @@ public class ServerModel {
 
             disconnectChat();
 
-            updateAllLists();
-
             userList.remove(user);
 
 
@@ -164,7 +158,7 @@ public class ServerModel {
         }
 
         private void sendChatMessage(User from, String message) {
-            PDU msgPdu = pdu_handler.create_msg_pdu(message, from.getFullName());
+            PDU msgPdu = PduHandler.getInstance().create_msg_pdu(message, from.getFullName());
             SocketIO.sendPDU(getWriter(), msgPdu);
             //SocketIO.sendMessage(SocketIO.TYPE_MESSAGE, from, getWriter(), message);
         }
@@ -172,9 +166,9 @@ public class ServerModel {
         private void sendChatInfoPDU(User from) {
             PDU chatInfoPDU;
             if (from == null) {
-                chatInfoPDU = pdu_handler.create_chatinfo_pdu("_null");
+                chatInfoPDU = PduHandler.getInstance().create_chatinfo_pdu("_null");
             } else {
-                chatInfoPDU = pdu_handler.create_chatinfo_pdu(from.getFullName());
+                chatInfoPDU = PduHandler.getInstance().create_chatinfo_pdu(from.getFullName());
             }
             SocketIO.sendPDU(getWriter(), chatInfoPDU);
             //SocketIO.sendMessage(SocketIO.TYPE_MESSAGE, from, getWriter(), message);
@@ -190,7 +184,7 @@ public class ServerModel {
                 }
             }
 
-            PDU userlistPDU = pdu_handler.create_userlist_pdu(userlistString);
+            PDU userlistPDU = PduHandler.getInstance().create_userlist_pdu(userlistString);
 
             SocketIO.sendPDU(getWriter(), userlistPDU);
         }
@@ -333,18 +327,35 @@ public class ServerModel {
         void handleInput(String input) throws IllegalArgumentException {
             try {
 
-                PDU incomingPDU = pdu_handler.parse_pdu(input);
+                PDU incomingPDU = PduHandler.getInstance().parse_pdu(input);
 
-                if (incomingPDU.type == 1) {
-                    PDU_HANDLER.PDU_MESSAGE messagePDU = (PDU_HANDLER.PDU_MESSAGE)incomingPDU;
+                switch (incomingPDU.type) {
 
+                    case PduHandler.MESSAGE_PDU: {
+                        PduHandler.PDU_MESSAGE messagePDU = (PduHandler.PDU_MESSAGE)incomingPDU;
+                        handleMessaging(messagePDU.message);
+                        break;
+                    }
+                    case PduHandler.COMMAND_PDU: {
+                        PduHandler.PDU_COMMAND commandPDU = (PduHandler.PDU_COMMAND)incomingPDU;
+                        handleCommand(commandPDU.command);
+                        break;
+                    }
+                    case PduHandler.CHATINFO_PDU: {
+                        PduHandler.PDU_CHATINFO chatInfoPDU = (PduHandler.PDU_CHATINFO)incomingPDU;
+                        if (user == null) {
 
-                    handleMessaging(messagePDU.message);
-
-                } else if (incomingPDU.type == 2) {
-                    PDU_HANDLER.PDU_COMMAND commandPDU = (PDU_HANDLER.PDU_COMMAND)incomingPDU;
-
-                    handleCommand(commandPDU.command);
+                            System.out.println("PDU: " + incomingPDU.toString());
+                            user = new User(chatInfoPDU.chatPartner, 0);
+                            user.setId(getFirstId(user.getUsername()));
+                            userList.add(user);
+                        }
+                        break;
+                    }
+                    case PduHandler.USERLIST_REQUEST_PDU: {
+                        sendUserListPDU(getUserList());
+                        break;
+                    }
                 }
 
             } catch (Exception e) {
@@ -357,29 +368,27 @@ public class ServerModel {
 
 
             if (user == null) {
-                readUserInfo();
-                updateAllLists();
+                //readUserInfo();
             }
 
             while (!exit) {
+
                 String input = null;
                 try {
                     input = SocketIO.getInput(is);
                 } catch (IOException e) {
                     System.out.println("Error: No response from " +
                             user.getFullName() + ". Removing");
-                    updateAllLists();
                     disconnectChat();
                     userList.remove(user);
                 }
-
 
                 if (input == null) {
                     System.out.println("Unidentified message received (null) from "
                             + socket.getInetAddress());
                     break;
                 } else {
-                    System.out.println(user.getFullName() + ": " + input);
+                    //System.out.println(user.getFullName() + ": " + input);
                     try {
                         handleInput(input);
                     } catch (IllegalArgumentException e) {

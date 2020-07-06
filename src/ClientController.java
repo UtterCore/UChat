@@ -1,16 +1,6 @@
-import com.sun.xml.internal.ws.wsdl.ActionBasedOperationSignature;
-
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.net.ConnectException;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.SocketException;
 import java.util.Queue;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
@@ -29,7 +19,6 @@ public class ClientController {
     private Scanner input;
     private boolean exit;
     private ScheduledExecutorService outputThread;
-    private PDU_HANDLER pdu_handler;
 
     private class guiSendThread extends Thread {
 
@@ -73,31 +62,26 @@ public class ClientController {
         }
     }
 
+
+    public class submitMessageListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            new guiSendThread().start();
+        }
+    }
+
     public ClientController() {
         client = new ClientModel();
         input = new Scanner(System.in);
-        pdu_handler = new PDU_HANDLER();
 
         SwingUtilities.invokeLater(() -> {
                 gui = new GUI();
-            gui.getSendMessageButton().addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    new guiSendThread().start();
-                }
-            } );
 
-            gui.getEnterMessageArea().addActionListener(new ActionListener() {
-
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    new guiSendThread().start();
-                }
-            });
+            gui.getSendMessageButton().addActionListener(new submitMessageListener());
+            gui.getEnterMessageArea().addActionListener(new submitMessageListener());
 
             cmh = new ClientMessageHandler(client, gui);
         });
-
-
 
         exit = false;
         outputThread = Executors.newScheduledThreadPool(1);
@@ -110,8 +94,8 @@ public class ClientController {
 
         switch (pdu.type) {
 
-            case 1: {
-                PDU_HANDLER.PDU_MESSAGE msgPdu = (PDU_HANDLER.PDU_MESSAGE)pdu;
+            case PduHandler.MESSAGE_PDU: {
+                PduHandler.PDU_MESSAGE msgPdu = (PduHandler.PDU_MESSAGE)pdu;
 
                 SwingUtilities.invokeLater(() -> {
                     if (!msgPdu.sender.equals(" ")) {
@@ -121,8 +105,8 @@ public class ClientController {
                 });
                 break;
             }
-            case 3: {
-                PDU_HANDLER.PDU_CHATINFO chatInfoPdu = (PDU_HANDLER.PDU_CHATINFO)pdu;
+            case PduHandler.CHATINFO_PDU: {
+                PduHandler.PDU_CHATINFO chatInfoPdu = (PduHandler.PDU_CHATINFO)pdu;
 
                 if (chatInfoPdu.chatPartner.equals("_null")) {
                     gui.setChatPartnerLabel(null);
@@ -134,8 +118,8 @@ public class ClientController {
                 break;
             }
 
-            case 4: {
-                PDU_HANDLER.PDU_USERLIST userlistPdu = (PDU_HANDLER.PDU_USERLIST)pdu;
+            case PduHandler.USERLIST_PDU: {
+                PduHandler.PDU_USERLIST userlistPdu = (PduHandler.PDU_USERLIST)pdu;
                 gui.updateUserlist(userlistPdu.usernames);
             }
         }
@@ -154,7 +138,7 @@ public class ClientController {
                 }
             } else {
                 if (!messageQueue.isEmpty()) {
-                    PDU incomingPDU = pdu_handler.parse_pdu(messageQueue.poll());
+                    PDU incomingPDU = PduHandler.getInstance().parse_pdu(messageQueue.poll());
                     handlePDU(incomingPDU);
                 }
             }

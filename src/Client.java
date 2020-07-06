@@ -12,7 +12,7 @@ public class Client {
         TODO: Friend list
         TODO: Make outputqueue for server
         TODO: Save chats locally (JSON)
-        TODO: (later) Save user data with SQL
+        TODO: (later) Save user data with SQL!
          */
         new ClientController();
     }

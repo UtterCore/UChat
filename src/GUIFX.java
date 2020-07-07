@@ -26,21 +26,29 @@ import java.net.*;
 public class GUIFX {
 
     private Stage stage;
-    private Button submitButton;
+    private Stage friendlistStage;
+
+    private Button userSubmitButton;
+    private Button chatSubmitButton;
     private TextField userTextField;
     private Text actiontarget;
 
 
     private TextField chatField;
     private TextArea chatArea;
+    private TextArea fListArea;
 
     public GUIFX(Stage stage) {
 
         this.stage = stage;
     }
 
-    public Button getSubmitButton() {
-        return submitButton;
+    public Button getUserSubmitButton() {
+        return userSubmitButton;
+    }
+
+    public Button getChatSubmitButton() {
+        return chatSubmitButton;
     }
 
     public TextField getUserTextField() {
@@ -96,10 +104,10 @@ public class GUIFX {
         userTextField = new TextField();
         grid.add(userTextField, 1, 1);
 
-        submitButton = new Button("Sign in");
+        userSubmitButton = new Button("Sign in");
         HBox hbBtn = new HBox(10);
         hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
-        hbBtn.getChildren().add(submitButton);
+        hbBtn.getChildren().add(userSubmitButton);
         grid.add(hbBtn, 1, 3);
 
 
@@ -122,6 +130,9 @@ public class GUIFX {
     }
     public void showChat() {
 
+
+        stage.setTitle("UChat");
+
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
         grid.setHgap(10);
@@ -133,12 +144,13 @@ public class GUIFX {
         grid.add(chatArea, 1, 1);
 
         chatField = new TextField();
+        chatField.setFocusTraversable(false);
         grid.add(chatField, 1, 2);
 
-        submitButton = new Button("Send");
+        chatSubmitButton = new Button("Send");
         HBox hbBtn = new HBox(10);
         hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
-        hbBtn.getChildren().add(submitButton);
+        hbBtn.getChildren().add(chatSubmitButton);
         grid.add(hbBtn, 1, 3);
 
         chatField.requestFocus();
@@ -146,6 +158,25 @@ public class GUIFX {
         Scene chatScene = new Scene(grid,400, 300);
         stage.setScene(chatScene);
 
+    }
+
+    public void showFriendlist() {
+        friendlistStage = new Stage();
+        friendlistStage.setTitle("UChat - Friends");
+
+        GridPane grid = new GridPane();
+        grid.setAlignment(Pos.CENTER);
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(25, 25, 25, 25));
+
+        fListArea = new TextArea();
+        fListArea.setEditable(false);
+        grid.add(fListArea, 1, 1);
+
+        Scene friendlistScene = new Scene(grid, 100, 400);
+        friendlistStage.setScene(friendlistScene);
+        friendlistStage.show();
     }
 
     public void showFXML() {

@@ -1,181 +1,135 @@
-import javafx.event.Event;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.control.Button;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-
-import javax.swing.*;
 import java.util.Queue;
-import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class ClientController {
 
+    private static final int STATE_LOGIN = 0;
+    private static final int STATE_CHAT = 1;
+
     private static final String IP_GLOBAL = "2.249.12.98";
     private static final String IP_LOCAL = "192.168.1.70";
     private static final int PORT = 4001;
 
     private ClientModel client;
-    //private GUI gui;
+
     private GUIFX guifx;
     private ScheduledExecutorService outputThread;
+    private int currentState;
 
-    private ClientController cont;
+
     public ClientController(GUIFX guifx) {
         client = new ClientModel();
-
-        cont = this;
         this.guifx = guifx;
+
+        initLogin();
+    }
+
+    private void changeState(int newState) {
+        if (currentState == STATE_CHAT && newState == STATE_LOGIN) {
+            outputThread.shutdown();
+        }
+        currentState = newState;
+    }
+
+    private void initLogin() {
+        changeState(STATE_LOGIN);
+        System.out.println("state login");
+
         guifx.showLogin();
-        addGUIFXListeners();
+        addSubmitListeners();
+    }
 
-        /*
-        SwingUtilities.invokeLater(() -> {
-            gui = new GUI();
+    private void initChat() {
+        changeState(STATE_CHAT);
 
-            gui.getSendMessageButton().addActionListener(new submitMessageListener());
-            gui.getEnterMessageArea().addActionListener(new submitMessageListener());
-        });
-        */
+        guifx.showChat();
+        //guifx.showFriendlist();
+        addSubmitListeners();
 
         outputThread = Executors.newScheduledThreadPool(1);
         outputThread.scheduleAtFixedRate(getOutput, 0, 50, TimeUnit.MILLISECONDS);
     }
 
-    //TODO: Duplicated code here. fix
-    private void addGUIFXListeners() {
-        Button submitButton = guifx.getSubmitButton();
-
-        if (guifx.getChatField() != null) {
-            guifx.getChatField().setOnAction(new EventHandler<javafx.event.ActionEvent>() {
-                @Override
-                public void handle(javafx.event.ActionEvent event) {
-                    guifx.clearError();
-
-                    String textAreaContent = guifx.getUserTextField().getText();
-                    if (textAreaContent.length() == 0) {
-                        return;
-                    }
-                    if (guifx.getUserTextField().getLength() == 0) {
-                        guifx.showUsernameError();
-                    } else {
-                        guifx.showConnecting();
-
-                        if (client.getUser() == null) {
-                            if (connect(textAreaContent)) {
-                                guifx.showChat();
-                                addGUIFXListeners();
-                                // guifx.showFXML();
-                            } else {
-                                guifx.showConnectionError();
-                            }
-                        } else {
-                            String chatAreaContent = guifx.getChatField().getText();
-                            sendMessage(chatAreaContent);
-                            System.out.println("sending " + chatAreaContent);
-                        }
-                        //  new guiSendThread().start();
-                    }
-                }
-            });
-        }
-
-        submitButton.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
-            @Override
-            public void handle(javafx.event.ActionEvent event) {
-                guifx.clearError();
-
-                String textAreaContent = guifx.getUserTextField().getText();
-                if (textAreaContent.length() == 0) {
-                    return;
-                }
-                if (guifx.getUserTextField().getLength() == 0) {
-                    guifx.showUsernameError();
-                } else {
-                    guifx.showConnecting();
-
-                    if (client.getUser() == null) {
-                        if (connect(textAreaContent)) {
-                            guifx.showChat();
-                            addGUIFXListeners();
-                           // guifx.showFXML();
-                        } else {
-                            guifx.showConnectionError();
-                        }
-                    } else {
-                        String chatAreaContent = guifx.getChatField().getText();
-                        sendMessage(chatAreaContent);
-                        System.out.println("sending " + chatAreaContent);
-                    }
-                  //  new guiSendThread().start();
-                }
+    private void addSubmitListeners() {
+        switch (currentState) {
+            case STATE_LOGIN: {
+                guifx.getUserTextField().setOnAction(submitLoginEventHandler());
+                guifx.getUserSubmitButton().setOnAction(submitLoginEventHandler());
+                break;
             }
-        });
+            case STATE_CHAT: {
+                guifx.getChatField().setOnAction(submitChatEventHandler());
+                guifx.getChatSubmitButton().setOnAction(submitChatEventHandler());
+                break;
+            }
+        }
     }
 
-    private boolean connect(String username) {
-        /*gui.getSendMessageButton().setEnabled(false);
-        gui.showConnectingMessage();
-        */
-        if (client.connectToChatServer(username, IP_LOCAL, IP_LOCAL, PORT)) {
-           // gui.showFullApp();
+    private void handleLoginSubmit() {
+        guifx.clearError();
 
-            /*
-            gui.getEnterMessageArea().setEnabled(true);
-            gui.getSendMessageButton().setEnabled(true);
-            */
-            return true;
-        } else {
-            /*
-            gui.showConnectionError();
+        //if has not yet logged in
+        if (client.getUser() == null) {
+            String textAreaContent = guifx.getUserTextField().getText();
+            if (textAreaContent.length() == 0) {
+                guifx.showUsernameError();
+                return;
+            }
 
-            gui.getEnterMessageArea().setEnabled(true);
-            gui.getSendMessageButton().setEnabled(true);
-            */
-            return false;
+            guifx.showConnecting();
+
+            if (connect(textAreaContent)) {
+                initChat();
+            } else {
+                guifx.showConnectionError();
+            }
         }
+    }
 
-        /*
-        gui.emptyMessageArea();
-        */
+    private void handleChatSubmit() {
+        String chatAreaContent = guifx.getChatField().getText();
+
+        guifx.getChatField().requestFocus();
+        if (chatAreaContent.isEmpty()) {
+            return;
+        }
+        sendMessage(chatAreaContent);
+    }
+
+    private EventHandler<javafx.event.ActionEvent> submitLoginEventHandler() {
+        return new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                handleLoginSubmit();
+            }
+        };
+    }
+
+    private EventHandler<javafx.event.ActionEvent> submitChatEventHandler() {
+        return new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                handleChatSubmit();
+            }
+        };
+    }
+
+
+
+    private boolean connect(String username) {
+        return (client.connectToChatServer(username, IP_LOCAL, IP_LOCAL, PORT));
     }
 
     private void sendMessage(String message) {
-        /*
-        gui.getSendMessageButton().setEnabled(false);
-        */
+
         ClientMessageHandler.prepareAndSend(client, message);
 
         guifx.addTextToChat(client.getUser().getFullName() + ": " + message + "\n");
         guifx.clearTextField();
-
-        /*
-        gui.getEnterMessageArea().setEnabled(true);
-        gui.getSendMessageButton().setEnabled(true);
-
-        gui.emptyMessageArea();
-        */
-    }
-
-    private class guiSendThread extends Thread {
-
-        @Override
-        public void run() {
-            String textAreaContent = guifx.getUserTextField().getText();
-            if (textAreaContent.length() == 0) {
-                return;
-            }
-
-            if (client.getUser() == null) {
-                connect(textAreaContent);
-            } else {
-                sendMessage(textAreaContent);
-            }
-        }
     }
 
     private void handlePDU(PDU pdu) {
@@ -185,12 +139,11 @@ public class ClientController {
             case PduHandler.MESSAGE_PDU: {
                 PduHandler.PDU_MESSAGE msgPdu = (PduHandler.PDU_MESSAGE)pdu;
 
-                SwingUtilities.invokeLater(() -> {
-                    if (!msgPdu.sender.equals(" ")) {
-                        guifx.addTextToChat(msgPdu.sender + ": ");
-                    }
-                    guifx.addTextToChat(msgPdu.message + "\n");
-                });
+                if (!msgPdu.sender.equals(" ")) {
+                    guifx.addTextToChat(msgPdu.sender + ": ");
+                }
+                guifx.addTextToChat(msgPdu.message + "\n");
+
                 break;
             }
             case PduHandler.CHATINFO_PDU: {

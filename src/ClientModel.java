@@ -20,11 +20,18 @@ public class ClientModel {
     private String chatPartner;
     private ScheduledExecutorService updateExec;
     private ScheduledExecutorService outgoingThread;
+    private ChatLogHandler chatLogHandler;
 
     public ClientModel() {
+        chatLogHandler = new ChatLogHandler();
+
         incomingPDUQueue = new LinkedList<>();
         outgoingPDUQueue = new LinkedList<>();
         incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("Enter username: ", null));
+    }
+
+    public ChatLogHandler getChatLogHandler() {
+        return chatLogHandler;
     }
 
     public Queue<PDU> getIncomingMessageQueue() {

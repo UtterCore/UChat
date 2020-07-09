@@ -1,5 +1,4 @@
-import javafx.application.Application;
-import javafx.event.ActionEvent;
+
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -9,19 +8,17 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.net.*;
+import java.util.ArrayList;
 
 public class GUIFX {
 
@@ -37,6 +34,11 @@ public class GUIFX {
     private TextField chatField;
     private TextArea chatArea;
     private TextArea fListArea;
+
+    private VBox friendsBox;
+    private VBox FLBox;
+
+    private Label chattingWith;
 
     public GUIFX(Stage stage) {
 
@@ -128,6 +130,12 @@ public class GUIFX {
     public void clearTextField() {
         chatField.setText("");
     }
+
+    public void openChatWith(String username) {
+        System.out.println("open chat with");
+        chattingWith.setText("");
+        chattingWith.setText(username);
+    }
     public void showChat() {
 
 
@@ -138,6 +146,9 @@ public class GUIFX {
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
+
+        chattingWith = new Label("Nobody");
+        grid.add(chattingWith, 1, 0);
 
         chatArea = new TextArea();
         chatArea.setEditable(false);
@@ -160,36 +171,55 @@ public class GUIFX {
 
     }
 
+
+    public VBox buildFriendlistItem(String name, int unreadMessages) {
+        VBox friendlistItem = new VBox(5);
+        if (unreadMessages == 0) {
+            friendlistItem.getChildren().add(new Label(name));
+        } else {
+            friendlistItem.getChildren().add(new Label(name + " (" + unreadMessages + ")"));
+        }
+        friendlistItem.setBorder(new Border(new BorderStroke(Color.GRAY, BorderStrokeStyle.SOLID, null, new BorderWidths(1))));
+        friendlistItem.setPadding(new Insets(0, 10, 0, 10));
+
+        friendlistItem.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent mouseEvent) {
+                if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+                    System.out.println("click on " + name);
+                }
+            }
+        });
+
+        return friendlistItem;
+    }
     public void showFriendlist() {
         friendlistStage = new Stage();
         friendlistStage.setTitle("UChat - Friends");
 
-        GridPane grid = new GridPane();
-        grid.setAlignment(Pos.CENTER);
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(25, 25, 25, 25));
+        FLBox = new VBox();
+        FLBox.setPadding(new Insets(20, 0, 20, 0));
 
-        fListArea = new TextArea();
-        fListArea.setEditable(false);
-        grid.add(fListArea, 1, 1);
+        friendsBox = new VBox();
 
-        Scene friendlistScene = new Scene(grid, 100, 400);
+        FLBox.getChildren().add(new Label("Friends"));
+        FLBox.getChildren().add(friendsBox);
+
+        Scene friendlistScene = new Scene(FLBox, 200, 300);
         friendlistStage.setScene(friendlistScene);
         friendlistStage.show();
     }
 
-    public void showFXML() {
-        FXMLLoader loader = new FXMLLoader();
+    public void updateFriendlist(ArrayList<String> friends) {
 
-        loader.setLocation(getClass().getResource("ChatLayout.fxml"));
 
-        try {
-            VBox box = loader.<VBox>load();
-            stage.setScene(new Scene(box, 400, 400));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        friendsBox.getChildren().clear();
     }
 
+    public VBox addToFriendList(String username, int unreadMessages) {
+        VBox newFriendItem = buildFriendlistItem(username, unreadMessages);
+
+        friendsBox.getChildren().add(newFriendItem);
+        return newFriendItem;
+    }
 }

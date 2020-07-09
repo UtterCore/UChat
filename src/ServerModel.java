@@ -34,6 +34,15 @@ public class ServerModel {
         return null;
     }
 
+    private User findUserByName(String username) {
+        for (User user : userList) {
+            if (user.getFullName().equals(username)) {
+                return user;
+            }
+        }
+        return null;
+    }
+
     public void startServer(int port) throws IOException {
 
         System.out.println("Starting server...");
@@ -314,11 +323,11 @@ public class ServerModel {
 
         void handleMessaging(String input) throws NullPointerException {
             if (targetUser != null) {
-                if (isConnectedTo(targetUser)) {
+                //if (isConnectedTo(targetUser)) {
                     findThreadByName(targetUser.getFullName()).sendChatMessage(user, input);
-                } else {
-                    sendChatMessage(serverUser, targetUser.getFullName() + " has not yet connected.");
-                }
+               // } else {
+               //     sendChatMessage(serverUser, targetUser.getFullName() + " has not yet connected.");
+                //}
             } else {
                 sendChatMessage(serverUser, "No receiver. Connect using /connect [user]");
             }
@@ -355,6 +364,10 @@ public class ServerModel {
                     case PduHandler.USERLIST_REQUEST_PDU: {
                         sendUserListPDU(getUserList());
                         break;
+                    }
+                    case PduHandler.SET_TARGET_PDU: {
+                        PduHandler.PDU_SET_TARGET setTargetPdu = (PduHandler.PDU_SET_TARGET)incomingPDU;
+                        targetUser = findUserByName(setTargetPdu.target);
                     }
                 }
 

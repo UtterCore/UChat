@@ -7,6 +7,7 @@ public class PduHandler {
     public static final int CHATINFO_PDU = 3;
     public static final int USERLIST_PDU = 4;
     public static final int USERLIST_REQUEST_PDU = 5;
+    public static final int SET_TARGET_PDU = 6;
 
     private static PduHandler pduHandler = new PduHandler();
 
@@ -39,6 +40,10 @@ public class PduHandler {
 
     public PDU_USERLIST_REQUEST create_userlist_requeust_pdu(String sender) {
         return new PDU_USERLIST_REQUEST(sender);
+    }
+
+    public PDU_SET_TARGET create_set_target_pdu(String target) {
+        return new PDU_SET_TARGET(target);
     }
 
     public PDU parse_pdu(String input) {
@@ -80,6 +85,11 @@ public class PduHandler {
                 case USERLIST_REQUEST_PDU: {
 
                     return create_userlist_requeust_pdu(parts[1]);
+                }
+
+                case SET_TARGET_PDU: {
+
+                    return create_set_target_pdu(parts[1]);
                 }
                 default: {
                     System.out.println("Invalid pdu type??");
@@ -176,6 +186,21 @@ public class PduHandler {
         @Override
         public String toString() {
             return String.valueOf(USERLIST_REQUEST_PDU) + ";" + sender;
+        }
+    }
+
+    public class PDU_SET_TARGET extends PDU {
+
+        public String target;
+
+        private PDU_SET_TARGET(String target) {
+            type = SET_TARGET_PDU;
+            this.target = target;
+        }
+
+        @Override
+        public String toString() {
+            return type + ";" + target;
         }
     }
 

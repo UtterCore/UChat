@@ -13,4 +13,9 @@ public class ClientMessageHandler {
         client.enqueuePDU(message_pdu);
         //client.handleInput(preparedMessage);
     }
+
+    public static void sendSetTarget(ClientModel client, String target) {
+        PDU setTargetPdu = PduHandler.getInstance().create_set_target_pdu(target);
+        client.enqueuePDU(setTargetPdu);
+    }
 }

@@ -1,5 +1,11 @@
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.input.MouseEvent;
+import sun.awt.PlatformFont;
+
+import java.util.ArrayList;
 import java.util.Queue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -9,6 +15,7 @@ public class ClientController {
 
     private static final int STATE_LOGIN = 0;
     private static final int STATE_CHAT = 1;
+    private static final int STATE_FRIENDS = 2;
 
     private static final String IP_GLOBAL = "2.249.12.98";
     private static final String IP_LOCAL = "192.168.1.70";
@@ -47,11 +54,35 @@ public class ClientController {
         changeState(STATE_CHAT);
 
         guifx.showChat();
-        //guifx.showFriendlist();
         addSubmitListeners();
 
         outputThread = Executors.newScheduledThreadPool(1);
         outputThread.scheduleAtFixedRate(getOutput, 0, 50, TimeUnit.MILLISECONDS);
+    }
+
+    private void initFriends() {
+        guifx.showFriendlist();
+    }
+
+    private void startChatWith(String username) {
+
+        //sendMessage("/connect " + username);
+        Platform.runLater(() -> guifx.openChatWith(username));
+        ClientMessageHandler.sendSetTarget(client, username);
+        client.setChatPartner(username);
+
+        Platform.runLater(() -> {
+
+            if (client.getChatLogHandler().hasMessages(username)) {
+                guifx.addTextToChat("Showing older messages from: " + username + "\n");
+            }
+                while (client.getChatLogHandler().hasMessages(username)) {
+                PduHandler.PDU_MESSAGE msgPdu = client.getChatLogHandler().getFirstMessageFromLog(username);
+
+                guifx.addTextToChat(msgPdu.sender + ": ");
+                guifx.addTextToChat(msgPdu.message + "\n");
+            }
+        });
     }
 
     private void addSubmitListeners() {
@@ -59,6 +90,10 @@ public class ClientController {
             case STATE_LOGIN: {
                 guifx.getUserTextField().setOnAction(submitLoginEventHandler());
                 guifx.getUserSubmitButton().setOnAction(submitLoginEventHandler());
+                break;
+            }
+            case STATE_FRIENDS: {
+
                 break;
             }
             case STATE_CHAT: {
@@ -84,6 +119,7 @@ public class ClientController {
 
             if (connect(textAreaContent)) {
                 initChat();
+                initFriends();
             } else {
                 guifx.showConnectionError();
             }
@@ -132,17 +168,38 @@ public class ClientController {
         guifx.clearTextField();
     }
 
+    private void handleMessage(PduHandler.PDU_MESSAGE messagePDU) {
+
+        String message = messagePDU.message;
+        String sender = messagePDU.sender;
+
+        Platform.runLater(() -> {
+
+            if (client.getChatPartner() != null) {
+                if (client.getChatPartner().equals(sender)) {
+                    guifx.addTextToChat(sender + ": ");
+                    guifx.addTextToChat(message + "\n");
+                } else {
+                    System.out.println("received msg from wrong person");
+                }
+            } else {
+                if (sender.equals(" ")) {
+                    guifx.addTextToChat(message + "\n");
+                } else {
+                    client.getChatLogHandler().addToLogs(messagePDU);
+                }
+            }
+        });
+    }
+
     private void handlePDU(PDU pdu) {
 
         switch (pdu.type) {
-
             case PduHandler.MESSAGE_PDU: {
                 PduHandler.PDU_MESSAGE msgPdu = (PduHandler.PDU_MESSAGE)pdu;
 
-                if (!msgPdu.sender.equals(" ")) {
-                    guifx.addTextToChat(msgPdu.sender + ": ");
-                }
-                guifx.addTextToChat(msgPdu.message + "\n");
+                System.out.println("received msg pdu: " + msgPdu.toString());
+                handleMessage(msgPdu);
 
                 break;
             }
@@ -160,8 +217,38 @@ public class ClientController {
             }
 
             case PduHandler.USERLIST_PDU: {
+
                 PduHandler.PDU_USERLIST userlistPdu = (PduHandler.PDU_USERLIST)pdu;
-             //   gui.updateUserlist(userlistPdu.usernames);
+
+                try {
+                    if (userlistPdu.usernames.size() > 1) {
+                        updateFriendlist(userlistPdu.usernames);
+
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private void updateFriendlist(ArrayList<String> userlist) {
+        Platform.runLater(() -> guifx.updateFriendlist(userlist));
+        for (String friend : userlist) {
+            if (!friend.equals(client.getUser().getFullName())) {
+
+                int unreadMessages = client.getChatLogHandler().getUnreadMessages(friend);
+
+                Platform.runLater(() -> {
+
+                    guifx.addToFriendList(friend, unreadMessages).setOnMouseClicked(new EventHandler<MouseEvent>() {
+                        @Override
+                        public void handle(MouseEvent event) {
+                            startChatWith(friend);
+                        }
+
+                    });
+                });
             }
         }
     }

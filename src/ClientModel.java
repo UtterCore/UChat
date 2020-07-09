@@ -27,7 +27,7 @@ public class ClientModel {
 
         incomingPDUQueue = new LinkedList<>();
         outgoingPDUQueue = new LinkedList<>();
-        incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("Enter username: ", null));
+        //incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("Enter username: ", null));
     }
 
     public ChatLogHandler getChatLogHandler() {
@@ -46,7 +46,7 @@ public class ClientModel {
         this.chatPartner = chatPartner;
     }
 
-    private void quit() {
+    public void quit() {
         try {
             sSocket.close();
         } catch (IOException e) {
@@ -116,7 +116,6 @@ public class ClientModel {
 
     private void createUser(String username) {
         user = new User(username, 0);
-        incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu(getCommandList(), null));
     }
 
 
@@ -124,14 +123,6 @@ public class ClientModel {
         return user;
     }
 
-    public String getCommandList() {
-        return("Commands:\n" +
-                "/commands - prints this list\n" +
-                "/users - prints a list of online users\n" +
-                "/connect [username] - attempts to start a chat with " +
-                "a user\n" +
-                "/disconnect - disconnects from a chat\n");
-    }
 
     public void enqueuePDU(PDU pdu) {
         outgoingPDUQueue.add(pdu);

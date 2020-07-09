@@ -14,6 +14,8 @@ import javafx.stage.Stage;
 public class Client extends Application {
 
 
+    ClientController controller;
+
     public static void main(String args[]) {
 
         launch(args);
@@ -21,6 +23,12 @@ public class Client extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        new ClientController(new GUIFX(primaryStage));
+        controller = new ClientController(new GUIFX(primaryStage));
+    }
+
+    @Override
+    public void stop() throws Exception {
+        System.out.println("stop!");
+        controller.quit();
     }
 }

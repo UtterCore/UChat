@@ -50,24 +50,22 @@ public class ClientController {
         addSubmitListeners();
     }
 
-    private void initChat() {
+    private void initChat(String username) {
         changeState(STATE_CHAT);
 
-        guifx.showChat();
+        guifx.showChat(username);
         addSubmitListeners();
-
-        outputThread = Executors.newScheduledThreadPool(1);
-        outputThread.scheduleAtFixedRate(getOutput, 0, 50, TimeUnit.MILLISECONDS);
     }
 
     private void initFriends() {
-        guifx.showFriendlist();
+        guifx.showFriendlist(client.getUser().getFullName());
     }
 
     private void startChatWith(String username) {
 
+        initChat(username);
         //sendMessage("/connect " + username);
-        Platform.runLater(() -> guifx.openChatWith(username));
+        //Platform.runLater(() -> guifx.openChatWith(username));
         ClientMessageHandler.sendSetTarget(client, username);
         client.setChatPartner(username);
 
@@ -76,6 +74,7 @@ public class ClientController {
             if (client.getChatLogHandler().hasMessages(username)) {
                 guifx.addTextToChat("Showing older messages from: " + username + "\n");
             }
+
                 while (client.getChatLogHandler().hasMessages(username)) {
                 PduHandler.PDU_MESSAGE msgPdu = client.getChatLogHandler().getFirstMessageFromLog(username);
 
@@ -118,8 +117,13 @@ public class ClientController {
             guifx.showConnecting();
 
             if (connect(textAreaContent)) {
-                initChat();
+               // initChat();
+                //guifx.hideLogin();
                 initFriends();
+
+                outputThread = Executors.newScheduledThreadPool(1);
+                outputThread.scheduleAtFixedRate(getOutput, 0, 50, TimeUnit.MILLISECONDS);
+
             } else {
                 guifx.showConnectionError();
             }
@@ -184,7 +188,7 @@ public class ClientController {
                 }
             } else {
                 if (sender.equals(" ")) {
-                    guifx.addTextToChat(message + "\n");
+                    //guifx.addTextToChat(message + "\n");
                 } else {
                     client.getChatLogHandler().addToLogs(messagePDU);
                 }
@@ -217,13 +221,16 @@ public class ClientController {
             }
 
             case PduHandler.USERLIST_PDU: {
-
                 PduHandler.PDU_USERLIST userlistPdu = (PduHandler.PDU_USERLIST)pdu;
 
                 try {
                     if (userlistPdu.usernames.size() > 1) {
                         updateFriendlist(userlistPdu.usernames);
-
+                    } else {
+                        Platform.runLater(() -> {
+                            guifx.clearFriendlist();
+                            guifx.sendEmptyFriendlist();
+                        });
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -233,7 +240,8 @@ public class ClientController {
     }
 
     private void updateFriendlist(ArrayList<String> userlist) {
-        Platform.runLater(() -> guifx.updateFriendlist(userlist));
+
+        Platform.runLater(() -> guifx.clearFriendlist());
         for (String friend : userlist) {
             if (!friend.equals(client.getUser().getFullName())) {
 
@@ -241,12 +249,18 @@ public class ClientController {
 
                 Platform.runLater(() -> {
 
-                    guifx.addToFriendList(friend, unreadMessages).setOnMouseClicked(new EventHandler<MouseEvent>() {
+                    boolean isCurrentChatPartner = false;
+
+                    if (client.getChatPartner() != null) {
+                        if (client.getChatPartner().equals(friend)) {
+                            isCurrentChatPartner = true;
+                        }
+                    }
+                    guifx.addToFriendList(friend, unreadMessages, isCurrentChatPartner).setOnMouseClicked(new EventHandler<MouseEvent>() {
                         @Override
                         public void handle(MouseEvent event) {
                             startChatWith(friend);
                         }
-
                     });
                 });
             }
@@ -254,6 +268,12 @@ public class ClientController {
     }
 
 
+    public void quit() {
+        outputThread.shutdown();
+        client.quit();
+        guifx = null;
+        client = null;
+    }
     private Runnable getOutput = new Runnable() {
 
         Queue<PDU> messageQueue;

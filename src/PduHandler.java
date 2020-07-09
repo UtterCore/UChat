@@ -8,6 +8,7 @@ public class PduHandler {
     public static final int USERLIST_PDU = 4;
     public static final int USERLIST_REQUEST_PDU = 5;
     public static final int SET_TARGET_PDU = 6;
+    public static final int IS_LEAVING_PDU = 7;
 
     private static PduHandler pduHandler = new PduHandler();
 
@@ -44,6 +45,10 @@ public class PduHandler {
 
     public PDU_SET_TARGET create_set_target_pdu(String target) {
         return new PDU_SET_TARGET(target);
+    }
+
+    public PDU_IS_LEAVING create_is_leaving_pdu() {
+       return new PDU_IS_LEAVING();
     }
 
     public PDU parse_pdu(String input) {
@@ -90,6 +95,9 @@ public class PduHandler {
                 case SET_TARGET_PDU: {
 
                     return create_set_target_pdu(parts[1]);
+                }
+                case IS_LEAVING_PDU: {
+                    return create_is_leaving_pdu();
                 }
                 default: {
                     System.out.println("Invalid pdu type??");
@@ -201,6 +209,18 @@ public class PduHandler {
         @Override
         public String toString() {
             return type + ";" + target;
+        }
+    }
+
+    public class PDU_IS_LEAVING extends PDU {
+
+        private PDU_IS_LEAVING() {
+            type = IS_LEAVING_PDU;
+        }
+
+        @Override
+        public String toString() {
+            return type + "; hej";
         }
     }
 

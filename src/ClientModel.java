@@ -15,19 +15,12 @@ public class ClientModel {
     private User user;
     private Socket sSocket;
     private PrintWriter writer;
-    volatile private Queue<PDU> incomingPDUQueue;
-    volatile private Queue<PDU> outgoingPDUQueue;
     private String chatPartner;
-    private ScheduledExecutorService updateExec;
-    private ScheduledExecutorService outgoingThread;
     private ChatLogHandler chatLogHandler;
+    private ClientMessageHandler cmh;
 
     public ClientModel() {
         chatLogHandler = new ChatLogHandler();
-
-        incomingPDUQueue = new LinkedList<>();
-        outgoingPDUQueue = new LinkedList<>();
-        //incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("Enter username: ", null));
     }
 
     public ChatLogHandler getChatLogHandler() {
@@ -35,7 +28,7 @@ public class ClientModel {
     }
 
     public Queue<PDU> getIncomingMessageQueue() {
-        return incomingPDUQueue;
+        return cmh.getIncomingPDUQueue();
     }
 
     public String getChatPartner() {
@@ -65,22 +58,16 @@ public class ClientModel {
         writer.flush();
     }
 
-    private void sendUserInfo() {
-        PDU pdu = PduHandler.getInstance().create_chatinfo_pdu(getUser().getUsername());
 
-        enqueuePDU(pdu);
-    }
 
     public void connectToServer(String address, int port) throws IOException {
-      //  incomingMessageQueue.add(pdu_handler.create_msg_pdu("Connecting to server... ", null).toString());
         sSocket = new Socket(InetAddress.getByName(address), port);
-       // incomingMessageQueue.add(pdu_handler.create_msg_pdu("Connected", null).toString());
 
         writer = new PrintWriter(sSocket.getOutputStream());
 
-        new InputThread(sSocket).start();
-
-        sendUserInfo();
+        cmh = new ClientMessageHandler(writer, user);
+        cmh.startInputThread(sSocket);
+        cmh.sendUserInfo();
     }
 
     public boolean connectToChatServer(String username, String globalAddress, String localAddress, int port) {
@@ -93,11 +80,12 @@ public class ClientModel {
         } catch (ConnectException b) {
 
             //try local
-            incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("No response. Trying to access locally...", null));
+            cmh.addToIncoming(PduHandler.getInstance().create_msg_pdu("No response. Trying to access locally...", null));
+
             try {
                 connectToServer(localAddress, port);
             } catch (IOException io) {
-                incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("No response from the chat server. Shutting down.", null));
+                cmh.addToIncoming(PduHandler.getInstance().create_msg_pdu("No response from the chat server. Shutting down.", null));
                 user = null;
                 return false;
             }
@@ -105,11 +93,6 @@ public class ClientModel {
             // e.printStackTrace();
         }
 
-        updateExec = Executors.newScheduledThreadPool(1);
-        updateExec.scheduleAtFixedRate(updater, 0, 1000, TimeUnit.MILLISECONDS);
-
-        outgoingThread = Executors.newScheduledThreadPool(1);
-        outgoingThread.scheduleAtFixedRate(outputThread, 0, 10, TimeUnit.MILLISECONDS);
 
         return true;
     }
@@ -124,63 +107,18 @@ public class ClientModel {
     }
 
 
-    public void enqueuePDU(PDU pdu) {
-        outgoingPDUQueue.add(pdu);
+    public void sendMessage(String message) {
+        cmh.prepareAndSend(message);
     }
 
-    private class InputThread extends Thread {
-
-        InputStream is;
-        private InputThread(Socket socket) {
-            try {
-                is = socket.getInputStream();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        @Override
-        public void run() {
-
-            while (true) {
-                String input;
-                try {
-                    input = SocketIO.getInput(is);
-                } catch (IOException e) {
-                    incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("No response from the server. Exit application.", null));
-                    quit();
-                    break;
-                }
-                incomingPDUQueue.add(PduHandler.getInstance().parse_pdu(input));
-            }
-        }
+    public void setTarget(String username) {
+        cmh.sendSetTarget(username);
     }
 
-    private Runnable outputThread = new Runnable() {
+    public void sendIsLeaving() {
+        cmh.sendIsLeaving();
+    }
 
-        @Override
-        public void run() {
+    //TODO: Kläm in i cmh på någgot sätt
 
-            if (!outgoingPDUQueue.isEmpty()) {
-                if (writer == null) {
-                    System.out.println("Server dead?");
-                    return;
-                }
-                SocketIO.sendPDU(writer, outgoingPDUQueue.poll());
-            }
-        }
-    };
-
-    private Runnable updater = new Runnable() {
-        private void sendUserlistRequestPDU() {
-
-            PduHandler.PDU_USERLIST_REQUEST pdu =
-                    PduHandler.getInstance().create_userlist_requeust_pdu(getUser().getFullName());
-            enqueuePDU(pdu);
-        }
-        @Override
-        public void run() {
-
-            sendUserlistRequestPDU();
-        }
-    };
 }

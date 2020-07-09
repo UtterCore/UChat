@@ -2,6 +2,7 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 
         /*
+        TODO: Handle a partner that exits while talking
         TODO: JavaFX
         TODO: Buttons for sending/reponding to chat requests
         TODO: Friend list

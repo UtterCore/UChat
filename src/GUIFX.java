@@ -16,6 +16,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -138,6 +139,9 @@ public class GUIFX {
         chattingWith.setText(username);
     }
 
+    public void setChatCloseEvent(EventHandler<WindowEvent> event) {
+        chatStage.setOnCloseRequest(event);
+    }
     public void hideLogin() {
         stage = null;
     }
@@ -148,6 +152,7 @@ public class GUIFX {
             chatStage = null;
         }
         chatStage = new Stage();
+
 
         chatStage.setTitle("UChat");
 

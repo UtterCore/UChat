@@ -3,6 +3,7 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.WindowEvent;
 import sun.awt.PlatformFont;
 
 import java.util.ArrayList;
@@ -23,9 +24,10 @@ public class ClientController {
 
     private ClientModel client;
 
-    private GUIFX guifx;
     private ScheduledExecutorService outputThread;
     private int currentState;
+    private boolean persistantChat;
+    private GUIFX guifx;
 
 
     public ClientController(GUIFX guifx) {
@@ -33,6 +35,7 @@ public class ClientController {
         this.guifx = guifx;
 
         initLogin();
+        persistantChat = true;
     }
 
     private void changeState(int newState) {
@@ -54,6 +57,14 @@ public class ClientController {
         changeState(STATE_CHAT);
 
         guifx.showChat(username);
+        guifx.setChatCloseEvent(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent event) {
+                client.setTarget(null);
+                client.setChatPartner(null);
+            }
+        });
+
         addSubmitListeners();
     }
 
@@ -62,26 +73,26 @@ public class ClientController {
     }
 
     private void startChatWith(String username) {
-
         initChat(username);
-        //sendMessage("/connect " + username);
-        //Platform.runLater(() -> guifx.openChatWith(username));
-        ClientMessageHandler.sendSetTarget(client, username);
+
+        client.setTarget(username);
         client.setChatPartner(username);
 
         Platform.runLater(() -> {
 
             if (client.getChatLogHandler().hasMessages(username)) {
                 guifx.addTextToChat("Showing older messages from: " + username + "\n");
-            }
+                Queue<PduHandler.PDU_MESSAGE> unreadMessages = client.getChatLogHandler().getFullChatLog(username);
 
-                while (client.getChatLogHandler().hasMessages(username)) {
-                PduHandler.PDU_MESSAGE msgPdu = client.getChatLogHandler().getFirstMessageFromLog(username);
+                while (!unreadMessages.isEmpty()) {
+                    PduHandler.PDU_MESSAGE msgPdu = unreadMessages.poll();
 
-                guifx.addTextToChat(msgPdu.sender + ": ");
-                guifx.addTextToChat(msgPdu.message + "\n");
+                    guifx.addTextToChat(msgPdu.sender + ": ");
+                    guifx.addTextToChat(msgPdu.message + "\n");
+                }
             }
         });
+
     }
 
     private void addSubmitListeners() {
@@ -166,7 +177,7 @@ public class ClientController {
 
     private void sendMessage(String message) {
 
-        ClientMessageHandler.prepareAndSend(client, message);
+        client.sendMessage(message);
 
         guifx.addTextToChat(client.getUser().getFullName() + ": " + message + "\n");
         guifx.clearTextField();
@@ -269,10 +280,14 @@ public class ClientController {
 
 
     public void quit() {
+        System.out.println("Quit!");
+        client.sendIsLeaving();
         outputThread.shutdown();
         client.quit();
         guifx = null;
         client = null;
+
+        System.exit(1);
     }
     private Runnable getOutput = new Runnable() {
 

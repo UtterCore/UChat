@@ -368,6 +368,13 @@ public class ServerModel {
                     case PduHandler.SET_TARGET_PDU: {
                         PduHandler.PDU_SET_TARGET setTargetPdu = (PduHandler.PDU_SET_TARGET)incomingPDU;
                         targetUser = findUserByName(setTargetPdu.target);
+                        break;
+                    }
+                    case PduHandler.IS_LEAVING_PDU: {
+                        System.out.println("received is leaving!");
+                        disconnectChat();
+                        userList.remove(user);
+                        break;
                     }
                 }
 

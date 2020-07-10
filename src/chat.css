@@ -1,0 +1,50 @@
+.chat_background {
+
+}
+
+.friendlist_background {
+    -fx-background-color: #3e3e3e;
+    -fx-text-fill: white;
+}
+
+.friendlist_topbar {
+    -fx-background-color: #888888;
+    -fx-border-color: lightblue;
+}
+
+.friendlist_item {
+    -fx-padding: 10px;
+    -fx-background-color: #3e3e3e;
+    -fx-border-color: #888888;
+}
+
+.friendlist_item:hover {
+    -fx-background-color: #888888;
+    -fx-border-color: #888888;
+}
+
+.friendlist_item_text {
+    -fx-font-size: 13px;
+}
+
+.chat_textarea {
+    -fx-background-color: #888888;
+    text-area-background: black ;
+    -fx-text-fill: white;
+}
+
+.chat_textarea .content {
+    -fx-background-color: #888888;
+}
+
+.button {
+    -fx-background-color: #3e3e3e;
+    -fx-text-fill: lightblue;
+    -fx-border-color: #888888;;
+}
+
+.button:hover {
+    -fx-background-color: #888888;
+    -fx-text-fill: lightblue;
+    -fx-border-color: #888888;
+}

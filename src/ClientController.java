@@ -26,7 +26,6 @@ public class ClientController {
 
     private ScheduledExecutorService outputThread;
     private int currentState;
-    private boolean persistantChat;
     private GUIFX guifx;
 
 
@@ -35,7 +34,6 @@ public class ClientController {
         this.guifx = guifx;
 
         initLogin();
-        persistantChat = true;
     }
 
     private void changeState(int newState) {
@@ -128,8 +126,6 @@ public class ClientController {
             guifx.showConnecting();
 
             if (connect(textAreaContent)) {
-               // initChat();
-                //guifx.hideLogin();
                 initFriends();
 
                 outputThread = Executors.newScheduledThreadPool(1);
@@ -169,8 +165,6 @@ public class ClientController {
         };
     }
 
-
-
     private boolean connect(String username) {
         return (client.connectToChatServer(username, IP_LOCAL, IP_LOCAL, PORT));
     }
@@ -199,7 +193,6 @@ public class ClientController {
                 }
             } else {
                 if (sender.equals(" ")) {
-                    //guifx.addTextToChat(message + "\n");
                 } else {
                     client.getChatLogHandler().addToLogs(messagePDU);
                 }
@@ -218,6 +211,7 @@ public class ClientController {
 
                 break;
             }
+
             case PduHandler.CHATINFO_PDU: {
                 PduHandler.PDU_CHATINFO chatInfoPdu = (PduHandler.PDU_CHATINFO)pdu;
 

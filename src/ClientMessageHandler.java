@@ -16,13 +16,21 @@ public class ClientMessageHandler {
     volatile private Queue<PDU> incomingPDUQueue;
     volatile private Queue<PDU> outgoingPDUQueue;
     private User user;
+    private Socket sSocket;
 
-    public ClientMessageHandler(PrintWriter writer, User user) {
-        this.writer = writer;
+    public ClientMessageHandler(User user, Socket sSocket) {
         this.user = user;
+        this.sSocket = sSocket;
+        this.writer = null;
 
         incomingPDUQueue = new LinkedList<>();
         outgoingPDUQueue = new LinkedList<>();
+
+        try {
+            writer = new PrintWriter(sSocket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         outgoingThread = Executors.newScheduledThreadPool(1);
         outgoingThread.scheduleAtFixedRate(outputThread, 0, 10, TimeUnit.MILLISECONDS);
@@ -31,14 +39,11 @@ public class ClientMessageHandler {
         updateExec.scheduleAtFixedRate(updater, 0, 1000, TimeUnit.MILLISECONDS);
     }
 
-    public void addToIncoming(PDU pdu) {
-        incomingPDUQueue.add(pdu);
-    }
-    public Queue<PDU> getIncomingPDUQueue() {
+    public synchronized Queue<PDU> getIncomingPDUQueue() {
         return incomingPDUQueue;
     }
 
-    public void startInputThread(Socket sSocket) {
+    public void startIO() {
         new InputThread(sSocket).start();
     }
 
@@ -51,6 +56,10 @@ public class ClientMessageHandler {
             message_pdu = PduHandler.getInstance().create_msg_pdu(input, user.getFullName());
         }
         enqueuePDU(message_pdu);
+    }
+
+    public void sendToMe(String input, String from) {
+        enqueuePDU(PduHandler.getInstance().create_msg_pdu(input, from));
     }
 
     public void sendSetTarget(String target) {
@@ -71,7 +80,7 @@ public class ClientMessageHandler {
     }
 
 
-    public void enqueuePDU(PDU pdu) {
+    public synchronized void enqueuePDU(PDU pdu) {
         outgoingPDUQueue.add(pdu);
     }
 
@@ -100,7 +109,9 @@ public class ClientMessageHandler {
         @Override
         public void run() {
 
-            sendUserlistRequestPDU();
+            if (writer != null) {
+                sendUserlistRequestPDU();
+            }
         }
     };
 

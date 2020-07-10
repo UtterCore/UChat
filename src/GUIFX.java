@@ -91,6 +91,7 @@ public class GUIFX {
         primaryStage.setTitle("UChat Login");
 
         GridPane grid = new GridPane();
+        grid.getStyleClass().add("friendlist_background");
         grid.setAlignment(Pos.CENTER);
         grid.setHgap(10);
         grid.setVgap(10);
@@ -100,13 +101,16 @@ public class GUIFX {
         grid.add(actiontarget, 1, 2);
 
         Text scenetitle = new Text("Welcome");
+        scenetitle.setFill(Color.LIGHTBLUE);
         scenetitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
         grid.add(scenetitle, 0, 0, 2, 1);
 
         Label userNameLabel = new Label("User name: ");
+        userNameLabel.setTextFill(Color.WHITE);
         grid.add(userNameLabel, 0, 1);
 
         userTextField = new TextField();
+        userTextField.getStyleClass().add("chat_textarea");
         grid.add(userTextField, 1, 1);
 
         userSubmitButton = new Button("Sign in");
@@ -117,6 +121,9 @@ public class GUIFX {
 
 
         Scene scene = new Scene(grid, 300, 275);
+
+
+        scene.getStylesheets().add(getClass().getResource("chat.css").toExternalForm());
 
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -147,6 +154,7 @@ public class GUIFX {
     }
     public void showChat(String username) {
 
+
         if (chatStage != null) {
             chatStage.close();
             chatStage = null;
@@ -157,20 +165,26 @@ public class GUIFX {
         chatStage.setTitle("UChat");
 
         GridPane grid = new GridPane();
+        grid.getStyleClass().add("friendlist_background");
         grid.setAlignment(Pos.CENTER);
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
 
         chattingWith = new Label(username);
+        chattingWith.setTextFill(Color.LIGHTBLUE);
         grid.add(chattingWith, 1, 0);
 
         chatArea = new TextArea();
         chatArea.setEditable(false);
+        chatArea.setFocusTraversable(false);
+        chatArea.getStyleClass().add("chat_textarea");
+
         grid.add(chatArea, 1, 1);
 
         chatField = new TextField();
-        chatField.setFocusTraversable(false);
+        chatField.getStyleClass().add("chat_textarea");
+
         grid.add(chatField, 1, 2);
 
         chatSubmitButton = new Button("Send");
@@ -182,6 +196,10 @@ public class GUIFX {
         chatField.requestFocus();
 
         Scene chatScene = new Scene(grid,400, 300);
+
+
+        chatScene.getStylesheets().add(getClass().getResource("chat.css").toExternalForm());
+
         chatStage.setScene(chatScene);
         chatStage.show();
     }
@@ -192,8 +210,12 @@ public class GUIFX {
 
     public VBox buildFriendlistItem(String name, int unreadMessages, boolean isChatting) {
         VBox friendlistItem = new VBox(5);
+        friendlistItem.getStyleClass().add("friendlist_item");
 
         Text friendName = new Text();
+        friendName.getStyleClass().add("friendlist_item_text");
+        friendName.setFill(Color.WHITE);
+
         if (unreadMessages == 0) {
             friendName.setText(name);
         } else {
@@ -223,24 +245,31 @@ public class GUIFX {
     }
 
     public void sendEmptyFriendlist() {
-        friendsBox.getChildren().add(new Text("No friends online :("));
+        Text emptyText = new Text("No friends online :(");
+        emptyText.getStyleClass().add("friendlist_item_text");
+        emptyText.setFill(Color.WHITE);
+        friendsBox.getChildren().add(emptyText);
     }
     public void showFriendlist(String username) {
-        //stage = new Stage();
         stage.setTitle("UChat - Friends");
 
         FLBox = new VBox();
+        FLBox.getStyleClass().add("friendlist_background");
+
         FLBox.setPadding(new Insets(0, 0, 20, 0));
 
         friendsBox = new VBox();
 
         VBox FLTopBox = new VBox();
+        FLTopBox.getStyleClass().add("friendlist_topbar");
 
         Text textUsername = new Text(username);
+        textUsername.setFill(Color.LIGHTBLUE);
         textUsername.setFont(Font.font("Tahoma", FontWeight.BOLD, 13));
 
         Text friendsTopText = new Text("Friends");
         friendsTopText.setFont(Font.font("Tahoma", FontWeight.BOLD, 12));
+        friendsTopText.setFill(Color.WHITE);
 
         FLTopBox.setBorder(new Border(new BorderStroke(Color.GRAY, BorderStrokeStyle.SOLID, null, new BorderWidths(1))));
 
@@ -253,6 +282,7 @@ public class GUIFX {
 
         Scene friendlistScene = new Scene(FLBox, 200, 300);
 
+        friendlistScene.getStylesheets().add(getClass().getResource("chat.css").toExternalForm());
         stage.setScene(friendlistScene);
       //  stage.show();
     }

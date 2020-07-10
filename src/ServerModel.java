@@ -161,8 +161,9 @@ public class ServerModel {
             userList.add(user);
         }
 
-        private void sendChatMessage(User from, String message) {
-            PDU msgPdu = PduHandler.getInstance().create_msg_pdu(message, from.getFullName());
+        private void sendChatMessage(User from, String to, String message) {
+            System.out.println("forward chat msg: " + message);
+            PDU msgPdu = PduHandler.getInstance().create_msg_pdu(message, from.getFullName(), to);
             SocketIO.sendPDU(getWriter(), msgPdu);
             //SocketIO.sendMessage(SocketIO.TYPE_MESSAGE, from, getWriter(), message);
         }
@@ -201,6 +202,7 @@ public class ServerModel {
                     System.out.println("Wtf?");
                 }
 
+                /*
                 if (otherThread.targetUser == user) {
                     otherThread.sendChatMessage(serverUser, user.getFullName() +
                             " has left the chat");
@@ -211,7 +213,9 @@ public class ServerModel {
                             " is not requesting to chat anymore");
                 }
 
+
                 sendChatMessage(serverUser, "Disconnected from " + targetUser.getFullName());
+                */
                 sendChatInfoPDU(null);
                 targetUser = null;
             }
@@ -220,7 +224,7 @@ public class ServerModel {
         private void connectToUser(User otherUser) {
 
             if (otherUser == user) {
-                sendChatMessage(serverUser, "You cannot chat with yourself!");
+                sendChatMessage(serverUser, user.getFullName(), "You cannot chat with yourself!");
                 return;
             }
 
@@ -234,6 +238,7 @@ public class ServerModel {
                return;
            }
 
+           /*
             if (isConnectedTo(otherUser)) {
                 otherThread.sendChatMessage(serverUser, "User " +
                         user.getFullName() + " has connected to the chat");
@@ -251,6 +256,7 @@ public class ServerModel {
                         user.getFullName() + " would like to start a chat.\nType: " +
                         "/accept " + user.getFullName() + " to start the chat.");
             }
+            */
         }
 
         private boolean isConnectedTo(User otherUser) {
@@ -266,7 +272,7 @@ public class ServerModel {
                     User otherUser = findThreadByName(parts[1]).user;
                     connectToUser(otherUser);
                 } else {
-                    sendChatMessage(serverUser, "No such user online :(");
+                    sendChatMessage(serverUser, user.getFullName(), "No such user online :(");
                 }
             } else if (input.startsWith("accept")) {
                 String parts[] = input.split(" ");
@@ -277,20 +283,20 @@ public class ServerModel {
                     if (otherThread.getTargetUser() == user) {
                         connectToUser(otherUser);
                     } else {
-                        sendChatMessage(serverUser, "This user has not " +
+                        sendChatMessage(serverUser, user.getFullName(), "This user has not " +
                                 "requested to chat with you");
                     }
                 } else {
-                    sendChatMessage(serverUser, "No such user online :(");
+                    sendChatMessage(serverUser, user.getFullName(), "No such user online :(");
                 }
             } else {
                 switch (input) {
                     case "users": {
                         System.out.println("Received user request");
                         if (userList.size() == 2) {
-                            sendChatMessage(serverUser, "No users online :(");
+                            sendChatMessage(serverUser, user.getFullName(), "No users online :(");
                         } else {
-                            sendChatMessage(serverUser, "\n" + getUserListString(user));
+                            sendChatMessage(serverUser, user.getFullName(), "\n" + getUserListString(user));
                             sendUserListPDU(getUserList());
                         }
                         break;
@@ -309,7 +315,7 @@ public class ServerModel {
                         break;
                     }
                     default: {
-                        sendChatMessage(serverUser, "Invalid command.");
+                        sendChatMessage(serverUser, user.getFullName(), "Invalid command.");
                         break;
                     }
                 }
@@ -319,12 +325,13 @@ public class ServerModel {
         void handleMessaging(String input) throws NullPointerException {
             if (targetUser != null) {
                 //if (isConnectedTo(targetUser)) {
-                    findThreadByName(targetUser.getFullName()).sendChatMessage(user, input);
+                System.out.println("Server input: " + input);
+                    findThreadByName(targetUser.getFullName()).sendChatMessage(user, targetUser.getFullName(), input);
                // } else {
                //     sendChatMessage(serverUser, targetUser.getFullName() + " has not yet connected.");
                 //}
             } else {
-                sendChatMessage(serverUser, "No receiver. Connect using /connect [user]");
+                sendChatMessage(serverUser, user.getFullName(), "No receiver. Connect using /connect [user]");
             }
         }
 
@@ -407,7 +414,7 @@ public class ServerModel {
                     try {
                         handleInput(input);
                     } catch (IllegalArgumentException e) {
-                        sendChatMessage(serverUser, "Invalid command. Type /commands for help");
+                        sendChatMessage(serverUser, user.getFullName(), "Invalid command. Type /commands for help");
                     }
                 }
             }

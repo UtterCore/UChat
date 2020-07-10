@@ -26,6 +26,23 @@ public class ChatLogHandler {
         }
     }
 
+    public void addToLog(PduHandler.PDU_MESSAGE pdu, String username) {
+        boolean exists = false;
+        for (ChatLog chatLog : chatLogs) {
+            if (chatLog.getUsername().equals(username)) {
+                chatLog.getMessageQueue().add(pdu);
+                exists = true;
+                break;
+            }
+        }
+
+        if (!exists) {
+            ChatLog newChatLog = new ChatLog(username);
+            newChatLog.getMessageQueue().add(pdu);
+            chatLogs.add(newChatLog);
+        }
+    }
+
     public Queue<PduHandler.PDU_MESSAGE> getFullChatLog(String username) {
         ChatLog chatLog = findLogByUsername(username);
         if (chatLog == null) {

@@ -145,7 +145,7 @@ public class ClientController {
         if (chatAreaContent.isEmpty()) {
             return;
         }
-        sendMessage(chatAreaContent);
+        sendMessage(chatAreaContent, client.getChatPartner());
     }
 
     private EventHandler<javafx.event.ActionEvent> submitLoginEventHandler() {
@@ -170,9 +170,9 @@ public class ClientController {
         return (client.connectToChatServer(username, IP_LOCAL, IP_LOCAL, PORT));
     }
 
-    private void sendMessage(String message) {
+    private void sendMessage(String message, String target) {
 
-        client.sendMessage(message);
+        client.sendMessage(message, target);
 
         guifx.addTextToChat(client.getUser().getFullName() + ": " + message + "\n");
         guifx.clearTextField();
@@ -183,9 +183,8 @@ public class ClientController {
         String message = messagePDU.message;
         String sender = messagePDU.sender;
 
-        if (!(messagePDU instanceof PduHandler.PDU_HISTORY)) {
-            FileHandler.savePDUToFile(messagePDU, client.getUser().getFullName());
-        }
+        FileHandler.savePDUToFile(messagePDU, client.getUser().getFullName());
+
 
         Platform.runLater(() -> {
 
@@ -245,13 +244,6 @@ public class ClientController {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                break;
-            }
-            case PduHandler.HISTORY_PDU: {
-                PduHandler.PDU_HISTORY historyPDU = (PduHandler.PDU_HISTORY)pdu;
-
-                System.out.println("received msg pdu: " + historyPDU.toString());
-                handleMessage(historyPDU);
                 break;
             }
         }

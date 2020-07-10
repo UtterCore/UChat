@@ -48,7 +48,8 @@ public class ClientModel {
 
         for (PduHandler.PDU_MESSAGE oldPdu : oldMessages) {
             //cmh.sendHistory(oldPdu.message, oldPdu.sender);
-            chatLogHandler.addToLogs(oldPdu);
+            chatLogHandler.addToLog(oldPdu, username);
+            //chatLogHandler.addToLogs(oldPdu);
             System.out.println("sending old pdu: " + oldPdu.message);
         }
     }
@@ -94,8 +95,8 @@ public class ClientModel {
         return user;
     }
 
-    public void sendMessage(String message) {
-        cmh.prepareAndSend(message);
+    public void sendMessage(String message, String target) {
+        cmh.prepareAndSend(message, target);
     }
 
     public void setTarget(String username) {

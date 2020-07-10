@@ -13,12 +13,14 @@ public class FileHandler {
             Scanner scanner = new Scanner(file);
 
             while (scanner.hasNextLine()) {
-                System.out.println("adding pdu");
                 PDU pdu = PduHandler.getInstance().parse_pdu(scanner.nextLine());
                 PduHandler.PDU_MESSAGE msgPdu = (PduHandler.PDU_MESSAGE)pdu;
 
                 if (msgPdu.sender.equals(partnerUsername)) {
-                    System.out.println("also addingg it to the thing");
+                    pduList.add((PduHandler.PDU_MESSAGE) pdu);
+                }
+                if (msgPdu.sender.equals(username) && msgPdu.target.equals(partnerUsername)) {
+                    System.out.println(msgPdu.toString());
                     pduList.add((PduHandler.PDU_MESSAGE) pdu);
                 }
             }

@@ -9,7 +9,6 @@ public class PduHandler {
     public static final int USERLIST_REQUEST_PDU = 5;
     public static final int SET_TARGET_PDU = 6;
     public static final int IS_LEAVING_PDU = 7;
-    public static final int HISTORY_PDU = 8;
 
     private static PduHandler pduHandler = new PduHandler();
 
@@ -21,9 +20,9 @@ public class PduHandler {
         return pduHandler;
     }
 
-    public PDU_MESSAGE create_msg_pdu(String message, String sender) {
-
-        return new PDU_MESSAGE(message, sender);
+    public PDU_MESSAGE create_msg_pdu(String message, String sender, String target) {
+        System.out.println("creating msg pdu: " + message);
+        return new PDU_MESSAGE(message, sender, target);
     }
 
     public PDU_COMMAND create_cmd_pdu(String command, String sender) {
@@ -52,10 +51,6 @@ public class PduHandler {
        return new PDU_IS_LEAVING();
     }
 
-    public PDU_HISTORY create_history_pdu(String message, String sender) {
-
-        return new PDU_HISTORY(message, sender);
-    }
 
     public PDU parse_pdu(String input) {
 
@@ -67,11 +62,8 @@ public class PduHandler {
 
             switch (Integer.parseInt(parts[0])) {
                 case MESSAGE_PDU: {
-                 //   System.out.println("Message pdu found");
 
-                    //create msg pdu
-
-                    return create_msg_pdu(parts[2], parts[1]);
+                    return create_msg_pdu(parts[3], parts[1], parts[2]);
                 }
                 case COMMAND_PDU: {
                    // System.out.println("Command pdu found");
@@ -105,13 +97,6 @@ public class PduHandler {
                 case IS_LEAVING_PDU: {
                     return create_is_leaving_pdu();
                 }
-                case HISTORY_PDU: {
-                    //   System.out.println("Message pdu found");
-
-                    //create msg pdu
-
-                    return create_history_pdu(parts[2], parts[1]);
-                }
                 default: {
                     System.out.println("Invalid pdu type??");
 
@@ -125,19 +110,21 @@ public class PduHandler {
 
         public String message;
         public String sender;
+        public String target;
 
-        private PDU_MESSAGE(String message, String sender) {
+        private PDU_MESSAGE(String message, String sender, String target) {
             type = MESSAGE_PDU;
             if (sender == null) {
                 sender = " ";
             }
             this.message = message;
             this.sender = sender;
+            this.target = target;
         }
 
         @Override
         public String toString() {
-            return type + ";" + sender + ";" + message;
+            return type + ";" + sender + ";" + target + ";" + message;
         }
     }
 
@@ -234,14 +221,6 @@ public class PduHandler {
         @Override
         public String toString() {
             return type + "; hej";
-        }
-    }
-
-    public class PDU_HISTORY extends PDU_MESSAGE {
-
-        private PDU_HISTORY(String message, String sender) {
-            super(message, sender);
-            type = HISTORY_PDU;
         }
     }
 }

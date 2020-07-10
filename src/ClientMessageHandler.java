@@ -47,13 +47,14 @@ public class ClientMessageHandler {
         new InputThread(sSocket).start();
     }
 
-    public void prepareAndSend(String input) {
+    public void prepareAndSend(String input, String target) {
         PDU message_pdu;
 
+        System.out.println("prepareandsend input " + input);
         if (input.startsWith("/")) {
             message_pdu = PduHandler.getInstance().create_cmd_pdu(input.substring(1), user.getFullName());
         } else {
-            message_pdu = PduHandler.getInstance().create_msg_pdu(input, user.getFullName());
+            message_pdu = PduHandler.getInstance().create_msg_pdu(input, user.getFullName(), target);
         }
 
 
@@ -63,10 +64,7 @@ public class ClientMessageHandler {
     }
 
     public void sendToMe(String input, String from) {
-        enqueuePDU(PduHandler.getInstance().create_msg_pdu(input, from));
-    }
-    public void sendHistory(String input, String from) {
-        enqueuePDU(PduHandler.getInstance().create_history_pdu(input, from));
+        enqueuePDU(PduHandler.getInstance().create_msg_pdu(input, from, from));
     }
 
     public void sendSetTarget(String target) {
@@ -140,7 +138,7 @@ public class ClientMessageHandler {
                 try {
                     input = SocketIO.getInput(is);
                 } catch (IOException e) {
-                    incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("No response from the server. Exit application.", null));
+                    incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("No response from the server. Exit application.", null, user.getFullName()));
                     //quit();
                     break;
                 }

@@ -9,6 +9,7 @@ public class PduHandler {
     public static final int USERLIST_REQUEST_PDU = 5;
     public static final int SET_TARGET_PDU = 6;
     public static final int IS_LEAVING_PDU = 7;
+    public static final int HISTORY_PDU = 8;
 
     private static PduHandler pduHandler = new PduHandler();
 
@@ -49,6 +50,11 @@ public class PduHandler {
 
     public PDU_IS_LEAVING create_is_leaving_pdu() {
        return new PDU_IS_LEAVING();
+    }
+
+    public PDU_HISTORY create_history_pdu(String message, String sender) {
+
+        return new PDU_HISTORY(message, sender);
     }
 
     public PDU parse_pdu(String input) {
@@ -98,6 +104,13 @@ public class PduHandler {
                 }
                 case IS_LEAVING_PDU: {
                     return create_is_leaving_pdu();
+                }
+                case HISTORY_PDU: {
+                    //   System.out.println("Message pdu found");
+
+                    //create msg pdu
+
+                    return create_history_pdu(parts[2], parts[1]);
                 }
                 default: {
                     System.out.println("Invalid pdu type??");
@@ -224,4 +237,11 @@ public class PduHandler {
         }
     }
 
+    public class PDU_HISTORY extends PDU_MESSAGE {
+
+        private PDU_HISTORY(String message, String sender) {
+            super(message, sender);
+            type = HISTORY_PDU;
+        }
+    }
 }

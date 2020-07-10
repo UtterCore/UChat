@@ -55,11 +55,18 @@ public class ClientMessageHandler {
         } else {
             message_pdu = PduHandler.getInstance().create_msg_pdu(input, user.getFullName());
         }
+
+
+        FileHandler.savePDUToFile(message_pdu, user.getFullName());
+
         enqueuePDU(message_pdu);
     }
 
     public void sendToMe(String input, String from) {
         enqueuePDU(PduHandler.getInstance().create_msg_pdu(input, from));
+    }
+    public void sendHistory(String input, String from) {
+        enqueuePDU(PduHandler.getInstance().create_history_pdu(input, from));
     }
 
     public void sendSetTarget(String target) {

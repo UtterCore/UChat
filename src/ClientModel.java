@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Queue;
 
 public class ClientModel {
@@ -41,6 +42,16 @@ public class ClientModel {
         //writer.close();
     }
 
+    public void getOldMessages(String username) {
+        System.out.println("Searching old messages for " + user.getFullName());
+        ArrayList<PduHandler.PDU_MESSAGE> oldMessages = FileHandler.getMessages(user.getFullName(), username);
+
+        for (PduHandler.PDU_MESSAGE oldPdu : oldMessages) {
+            //cmh.sendHistory(oldPdu.message, oldPdu.sender);
+            chatLogHandler.addToLogs(oldPdu);
+            System.out.println("sending old pdu: " + oldPdu.message);
+        }
+    }
     public void connectToServer(String address, int port) throws IOException {
         sSocket = new Socket(InetAddress.getByName(address), port);
 

@@ -64,6 +64,7 @@ public class ClientController {
         });
 
         addSubmitListeners();
+        client.getOldMessages(username);
     }
 
     private void initFriends() {
@@ -182,6 +183,10 @@ public class ClientController {
         String message = messagePDU.message;
         String sender = messagePDU.sender;
 
+        if (!(messagePDU instanceof PduHandler.PDU_HISTORY)) {
+            FileHandler.savePDUToFile(messagePDU, client.getUser().getFullName());
+        }
+
         Platform.runLater(() -> {
 
             if (client.getChatPartner() != null) {
@@ -194,7 +199,7 @@ public class ClientController {
             } else {
                 if (sender.equals(" ")) {
                 } else {
-                    client.getChatLogHandler().addToLogs(messagePDU);
+                    //client.getChatLogHandler().addToLogs(messagePDU);
                 }
             }
         });
@@ -240,6 +245,14 @@ public class ClientController {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                break;
+            }
+            case PduHandler.HISTORY_PDU: {
+                PduHandler.PDU_HISTORY historyPDU = (PduHandler.PDU_HISTORY)pdu;
+
+                System.out.println("received msg pdu: " + historyPDU.toString());
+                handleMessage(historyPDU);
+                break;
             }
         }
     }

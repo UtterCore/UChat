@@ -92,8 +92,8 @@ public class ServerModel {
 
     private class ServerThread extends Thread {
 
-        public volatile User user;
-        public volatile User targetUser;
+        private volatile User user;
+        private volatile User targetUser;
 
         Scanner inputScanner;
         PrintWriter writer;
@@ -119,11 +119,6 @@ public class ServerModel {
             }
         }
 
-        private void updateAllLists() {
-            for (ServerThread thread : serverThreads) {
-                thread.sendUserListPDU(getUserList());
-            }
-        }
         private void quit() {
 
             disconnectChat();

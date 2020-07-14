@@ -1,6 +1,5 @@
 
 import javafx.event.EventHandler;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -18,10 +17,10 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-import java.io.IOException;
-import java.util.ArrayList;
-
 public class GUIFX {
+
+    public static final int LOGIN_FAILED = 1;
+    public static final int WRONG_CREDENTIALS = 2;
 
     private Stage stage;
     private Stage friendlistStage;
@@ -73,6 +72,16 @@ public class GUIFX {
     public void showConnectionError() {
         actiontarget.setFill(Color.FIREBRICK);
         actiontarget.setText("Could not connect to chat server");
+    }
+
+    public void showLoginError(int errorType) {
+        switch (errorType) {
+            case WRONG_CREDENTIALS: {
+                actiontarget.setFill(Color.FIREBRICK);
+                actiontarget.setText("Wrong username or password");
+                break;
+            }
+        }
     }
 
     public void clearError() {
@@ -129,6 +138,15 @@ public class GUIFX {
         primaryStage.show();
     }
 
+    public void lockLoginScreen() {
+        userSubmitButton.setDisable(true);
+        userTextField.setDisable(true);
+    }
+
+    public void unlockLoginScreen() {
+        userSubmitButton.setDisable(false);
+        userTextField.setDisable(false);
+    }
     public TextArea getChatArea() {
         return chatArea;
     }

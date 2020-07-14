@@ -151,16 +151,6 @@ public class ServerModel {
             this.writer = writer;
         }
 
-        private void readUserInfo() {
-            try {
-                user = new User(SocketIO.getInput(is), 0);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            user.setId(getFirstId(user.getUsername()));
-            userList.add(user);
-        }
-
         private void sendChatMessage(User from, String to, String message) {
             System.out.println("forward chat msg: " + message);
             PDU msgPdu = PduHandler.getInstance().create_msg_pdu(message, from.getFullName(), to);
@@ -180,7 +170,6 @@ public class ServerModel {
         }
 
         private void sendUserListPDU(ArrayList<User> userlist) {
-
 
             ArrayList<String> userlistString = new ArrayList<>();
             for (User user : userList) {
@@ -202,21 +191,7 @@ public class ServerModel {
                     System.out.println("Wtf?");
                 }
 
-                /*
-                if (otherThread.targetUser == user) {
-                    otherThread.sendChatMessage(serverUser, user.getFullName() +
-                            " has left the chat");
-                    otherThread.sendChatInfoPDU(null);
-                    otherThread.targetUser = null;
-                } else {
-                    otherThread.sendChatMessage(serverUser, user.getFullName() +
-                            " is not requesting to chat anymore");
-                }
-
-
-                sendChatMessage(serverUser, "Disconnected from " + targetUser.getFullName());
-                */
-                sendChatInfoPDU(null);
+                //sendChatInfoPDU(null);
                 targetUser = null;
             }
         }
@@ -237,31 +212,6 @@ public class ServerModel {
            if (otherThread == null) {
                return;
            }
-
-           /*
-            if (isConnectedTo(otherUser)) {
-                otherThread.sendChatMessage(serverUser, "User " +
-                        user.getFullName() + " has connected to the chat");
-
-                sendChatMessage(serverUser, "You are now connected to " +
-                        targetUser.getFullName() + "!");
-
-                sendChatInfoPDU(otherUser);
-                otherThread.sendChatInfoPDU(user);
-            } else {
-                sendChatMessage(serverUser, "Attempting to connect to " +
-                        otherUser.getFullName() + ", please wait.");
-
-                otherThread.sendChatMessage(serverUser, "User " +
-                        user.getFullName() + " would like to start a chat.\nType: " +
-                        "/accept " + user.getFullName() + " to start the chat.");
-            }
-            */
-        }
-
-        private boolean isConnectedTo(User otherUser) {
-            return (getTargetUser() == otherUser &&
-                    findThreadByName(otherUser.getFullName()).getTargetUser() == user);
         }
 
         void handleCommand(String input) throws NullPointerException {
@@ -335,7 +285,34 @@ public class ServerModel {
             }
         }
 
-        void handleInput(String input) throws IllegalArgumentException {
+        int handleLogin(String username, String password) {
+
+            int loginAccepted = 1;
+            if (username.equals("wrong")) {
+                loginAccepted = 0;
+            }
+
+            PduHandler.PDU_LOGIN_RESPONSE loginResponse = PduHandler.getInstance().create_login_response(loginAccepted);
+
+            SocketIO.sendPDU(getWriter(), loginResponse);
+
+            if (loginAccepted == 1) {
+                user = new User(username, 0);
+                user.setId(getFirstId(user.getUsername()));
+                userList.add(user);
+
+
+                System.out.println("Login attempt: " +
+                        username + ", " + password + " accepted!");
+                return 1;
+            } else {
+                System.out.println("Login attempt: " +
+                        username + ", " + password + " refused!");
+                return 0;
+            }
+        }
+
+        int handleInput(String input) throws IllegalArgumentException {
             try {
 
                 PDU incomingPDU = PduHandler.getInstance().parse_pdu(input);
@@ -354,13 +331,6 @@ public class ServerModel {
                     }
                     case PduHandler.CHATINFO_PDU: {
                         PduHandler.PDU_CHATINFO chatInfoPDU = (PduHandler.PDU_CHATINFO)incomingPDU;
-                        if (user == null) {
-
-                            System.out.println("PDU: " + incomingPDU.toString());
-                            user = new User(chatInfoPDU.chatPartner, 0);
-                            user.setId(getFirstId(user.getUsername()));
-                            userList.add(user);
-                        }
                         break;
                     }
                     case PduHandler.USERLIST_REQUEST_PDU: {
@@ -378,20 +348,25 @@ public class ServerModel {
                         userList.remove(user);
                         break;
                     }
+
+                    case PduHandler.LOGIN_REQUEST_PDU: {
+                        PduHandler.PDU_LOGIN loginPDU = (PduHandler.PDU_LOGIN)incomingPDU;
+
+                        if (handleLogin(loginPDU.username, loginPDU.password) == 0) {
+                            return 0;
+                        }
+                        break;
+                    }
                 }
 
             } catch (Exception e) {
                 throw new IllegalArgumentException("Invalid arguments");
             }
+            return 1;
         }
 
         @Override
         public void run() {
-
-
-            if (user == null) {
-                //readUserInfo();
-            }
 
             while (!exit) {
 
@@ -399,10 +374,12 @@ public class ServerModel {
                 try {
                     input = SocketIO.getInput(is);
                 } catch (IOException e) {
-                    System.out.println("Error: No response from " +
-                            user.getFullName() + ". Removing");
-                    disconnectChat();
-                    userList.remove(user);
+                    if (user != null) {
+                        System.out.println("Error: No response from " +
+                                user.getFullName() + ". Removing");
+                        disconnectChat();
+                        userList.remove(user);
+                    }
                 }
 
                 if (input == null) {
@@ -412,9 +389,12 @@ public class ServerModel {
                 } else {
                     //System.out.println(user.getFullName() + ": " + input);
                     try {
-                        handleInput(input);
+                        if (handleInput(input) == 0) {
+                            System.out.println("Closing down server thread");
+                            quit();
+                        }
                     } catch (IllegalArgumentException e) {
-                        sendChatMessage(serverUser, user.getFullName(), "Invalid command. Type /commands for help");
+                       // sendChatMessage(serverUser, user.getFullName(), "Invalid command. Type /commands for help");
                     }
                 }
             }

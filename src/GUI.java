@@ -4,10 +4,6 @@
  * Author: Erik Rostö
  * Description: Responsible for drawing upp the GUI.
  */
-
-import com.sun.org.apache.xml.internal.security.utils.JDKXPathAPI;
-import sun.misc.JavaLangAccess;
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;

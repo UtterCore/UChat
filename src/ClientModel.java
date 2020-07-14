@@ -22,7 +22,10 @@ public class ClientModel {
     }
 
     public Queue<PDU> getIncomingMessageQueue() {
-        return cmh.getIncomingPDUQueue();
+        if (cmh != null) {
+            return cmh.getIncomingPDUQueue();
+        }
+        return null;
     }
 
     public String getChatPartner() {
@@ -39,7 +42,6 @@ public class ClientModel {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        //writer.close();
     }
 
     public void getOldMessages(String username) {
@@ -61,8 +63,19 @@ public class ClientModel {
         cmh.sendUserInfo();
     }
 
-    public boolean connectToChatServer(String username, String globalAddress, String localAddress, int port) {
+    public void shutDownConnection() {
+        try {
+            sSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        sSocket = null;
+        cmh = null;
+        chatLogHandler = null;
+    }
 
+
+    public boolean connectToChatServer(String username, String globalAddress, String localAddress, int port) {
         createUser(username);
 
         try {
@@ -71,11 +84,11 @@ public class ClientModel {
         } catch (ConnectException b) {
 
             //try local
-            cmh.sendToMe("No response. Trying to access locally...", null);
+//            cmh.sendToMe("No response. Trying to access locally...", null);
             try {
                 connectToServer(localAddress, port);
             } catch (IOException io) {
-                cmh.sendToMe("No response from chat server. Shutting down", null);
+       //         cmh.sendToMe("No response from chat server. Shutting down", null);
                 user = null;
                 return false;
             }
@@ -87,6 +100,12 @@ public class ClientModel {
         return true;
     }
 
+    public void killUser() {
+        user = null;
+    }
+    public void login() {
+        cmh.startUserListUpdater();
+    }
     private void createUser(String username) {
         user = new User(username, 0);
     }

@@ -35,6 +35,10 @@ public class ClientMessageHandler {
         outgoingThread = Executors.newScheduledThreadPool(1);
         outgoingThread.scheduleAtFixedRate(outputThread, 0, 10, TimeUnit.MILLISECONDS);
 
+
+    }
+
+    public void startUserListUpdater() {
         updateExec = Executors.newScheduledThreadPool(1);
         updateExec.scheduleAtFixedRate(updater, 0, 1000, TimeUnit.MILLISECONDS);
     }
@@ -73,8 +77,8 @@ public class ClientMessageHandler {
     }
 
     public void sendUserInfo() {
-        PDU pdu = PduHandler.getInstance().create_chatinfo_pdu(user.getUsername());
-
+        //PDU pdu = PduHandler.getInstance().create_chatinfo_pdu(user.getUsername());
+        PDU pdu = PduHandler.getInstance().create_login_pdu(user.getUsername(), "password");
         enqueuePDU(pdu);
     }
 
@@ -138,11 +142,14 @@ public class ClientMessageHandler {
                 try {
                     input = SocketIO.getInput(is);
                 } catch (IOException e) {
-                    incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("No response from the server. Exit application.", null, user.getFullName()));
+                   // incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("No response from the server. Exit application.", null, user.getFullName()));
                     //quit();
+                    System.out.println("Exception, no response from server");
                     break;
                 }
-                incomingPDUQueue.add(PduHandler.getInstance().parse_pdu(input));
+                if (input != null) {
+                    incomingPDUQueue.add(PduHandler.getInstance().parse_pdu(input));
+                }
             }
         }
     }

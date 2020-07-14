@@ -4,7 +4,6 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.WindowEvent;
-import sun.awt.PlatformFont;
 
 import java.util.ArrayList;
 import java.util.Queue;
@@ -33,12 +32,15 @@ public class ClientController {
         client = new ClientModel();
         this.guifx = guifx;
 
+        outputThread = Executors.newScheduledThreadPool(1);
+        outputThread.scheduleAtFixedRate(getOutput, 0, 50, TimeUnit.MILLISECONDS);
+
         initLogin();
     }
 
     private void changeState(int newState) {
         if (currentState == STATE_CHAT && newState == STATE_LOGIN) {
-            outputThread.shutdown();
+            //outputThread.shutdown();
         }
         currentState = newState;
     }
@@ -68,7 +70,7 @@ public class ClientController {
     }
 
     private void initFriends() {
-        guifx.showFriendlist(client.getUser().getFullName());
+       Platform.runLater(() -> guifx.showFriendlist(client.getUser().getFullName()));
     }
 
     private void startChatWith(String username) {
@@ -117,6 +119,7 @@ public class ClientController {
         guifx.clearError();
 
         //if has not yet logged in
+
         if (client.getUser() == null) {
             String textAreaContent = guifx.getUserTextField().getText();
             if (textAreaContent.length() == 0) {
@@ -124,17 +127,16 @@ public class ClientController {
                 return;
             }
 
-            guifx.showConnecting();
+            Platform.runLater(() -> guifx.showConnecting());
 
-            if (connect(textAreaContent)) {
-                initFriends();
-
-                outputThread = Executors.newScheduledThreadPool(1);
-                outputThread.scheduleAtFixedRate(getOutput, 0, 50, TimeUnit.MILLISECONDS);
-
-            } else {
-                guifx.showConnectionError();
-            }
+            new Thread(() -> {
+                guifx.lockLoginScreen();
+                if (connect(textAreaContent)) {
+                } else {
+                    Platform.runLater(() -> guifx.showConnectionError());
+                }
+                guifx.unlockLoginScreen();
+            }).start();
         }
     }
 
@@ -167,7 +169,7 @@ public class ClientController {
     }
 
     private boolean connect(String username) {
-        return (client.connectToChatServer(username, IP_LOCAL, IP_LOCAL, PORT));
+        return (client.connectToChatServer(username, "localhost", IP_LOCAL, PORT));
     }
 
     private void sendMessage(String message, String target) {
@@ -246,6 +248,22 @@ public class ClientController {
                 }
                 break;
             }
+
+            case PduHandler.LOGIN_RESPONSE_PDU: {
+                PduHandler.PDU_LOGIN_RESPONSE responsePDU = (PduHandler.PDU_LOGIN_RESPONSE)pdu;
+
+                if (responsePDU.status == 1) {
+                    initFriends();
+                    client.login();
+                } else {
+                    guifx.showLoginError(GUIFX.WRONG_CREDENTIALS);
+                    client.killUser();
+                    client.shutDownConnection();
+                    //client = new ClientModel();
+                  //  outputThread.shutdown();
+                }
+                break;
+            }
         }
     }
 
@@ -277,7 +295,6 @@ public class ClientController {
         }
     }
 
-
     public void quit() {
         System.out.println("Quit!");
         client.sendIsLeaving();
@@ -290,18 +307,14 @@ public class ClientController {
     }
     private Runnable getOutput = new Runnable() {
 
-        Queue<PDU> messageQueue;
         @Override
         public void run() {
 
-            if (messageQueue == null) {
-                if (client.getIncomingMessageQueue() != null) {
-                    messageQueue = client.getIncomingMessageQueue();
+            if (client.getIncomingMessageQueue() != null) {
+                if (!client.getIncomingMessageQueue().isEmpty()) {
+                    handlePDU(client.getIncomingMessageQueue().poll());
                 }
             } else {
-                if (!messageQueue.isEmpty()) {
-                    handlePDU(messageQueue.poll());
-                }
             }
         }
     };

@@ -5,10 +5,16 @@ import java.util.Scanner;
 public class FileHandler {
 
 
+    private static String getFileName(String username) {
+        return "chatlog_" + username + ".txt";
+    }
+
     public static ArrayList<PduHandler.PDU_MESSAGE> getMessages(String username, String partnerUsername) {
         ArrayList<PduHandler.PDU_MESSAGE> pduList = new ArrayList<>();
 
-        File file = new File("chatlog_" + username + ".txt");
+        String filename = getFileName(username);
+
+        File file = new File(filename);
         try {
             Scanner scanner = new Scanner(file);
 
@@ -25,14 +31,15 @@ public class FileHandler {
                 }
             }
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.out.println("No saved chat logs.");
         }
         return pduList;
     }
 
     public static void savePDUToFile(PDU pdu, String username) {
         BufferedWriter writer = null;
-        File file = new File("chatlog_" + username + ".txt");
+        File file = new File(getFileName(username));
         try {
              writer = new BufferedWriter(new FileWriter(file, true));
 

@@ -41,6 +41,8 @@ public class GUIFX {
 
     private Label chattingWith;
 
+    private boolean partnerOnline;
+
     Stage chatStage;
 
     public GUIFX(Stage stage) {
@@ -173,6 +175,7 @@ public class GUIFX {
     }
     public void showChat(String username) {
 
+        setPartnerOnline(true);
 
         if (chatStage != null) {
             chatStage.close();
@@ -223,6 +226,32 @@ public class GUIFX {
         chatStage.show();
     }
 
+    public void chatSetOffline(String username) {
+        if (!partnerOnline) {
+            return;
+        }
+        setPartnerOnline(false);
+        chattingWith.setText(username + " (offline)");
+        chatField.setDisable(true);
+    }
+
+    public void chatSetOnline(String username) {
+
+        if (partnerOnline) {
+            return;
+        }
+        setPartnerOnline(true);
+        chattingWith.setText(username);
+        chatField.setDisable(false);
+    }
+
+    public void setPartnerOnline(boolean partnerOnline) {
+        this.partnerOnline = partnerOnline;
+    }
+
+    public boolean getPartnerOnline() {
+        return partnerOnline;
+    }
     public void clearChat() {
         chatArea.clear();
     }

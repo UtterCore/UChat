@@ -10,6 +10,7 @@ import Client.*;
         TODO: Friend list
         TODO: Make outputqueue for server
         TODO: Save chats locally (JSON)!
+        TODO: Create/log in to old account
         TODO: (later) Save user data with SQL
          */
 

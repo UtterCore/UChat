@@ -32,6 +32,7 @@ public class ClientController {
     private int currentState;
     private GUIFX guifx;
 
+    private ArrayList<String> currentFriendlist;
 
     public ClientController(GUIFX guifx) {
         client = new ClientModel();
@@ -240,6 +241,9 @@ public class ClientController {
                 PduHandler.PDU_USERLIST userlistPdu = (PduHandler.PDU_USERLIST)pdu;
 
                 try {
+
+                    updateChat(userlistPdu.usernames);
+
                     if (userlistPdu.usernames.size() > 1) {
                         updateFriendlist(userlistPdu.usernames);
                     } else {
@@ -272,8 +276,27 @@ public class ClientController {
         }
     }
 
+    private void updateChat(ArrayList<String> userlist) {
+        Platform.runLater(() -> {
+            if (!userlist.contains(client.getChatPartner())) {
+                guifx.chatSetOffline(client.getChatPartner());
+            } else {
+                if (!guifx.getPartnerOnline()) {
+                    guifx.chatSetOnline(client.getChatPartner());
+                }
+            }
+        });
+    }
     private void updateFriendlist(ArrayList<String> userlist) {
 
+        if (currentFriendlist == null) {
+            currentFriendlist = new ArrayList<>(userlist);
+        } else {
+            if (currentFriendlist.equals(userlist)) {
+                //no update
+                return;
+            }
+        }
         Platform.runLater(() -> guifx.clearFriendlist());
         for (String friend : userlist) {
             if (!friend.equals(client.getUser().getFullName())) {

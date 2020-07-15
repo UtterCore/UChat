@@ -1,5 +1,10 @@
+package Client;
+
+import FileHandler.FileHandler;
+import GUI.GUIFX;
+import Messaging.PDU;
+import Messaging.PduHandler;
 import javafx.application.Platform;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.input.MouseEvent;
@@ -259,7 +264,7 @@ public class ClientController {
                     guifx.showLoginError(GUIFX.WRONG_CREDENTIALS);
                     client.killUser();
                     client.shutDownConnection();
-                    //client = new ClientModel();
+                    //client = new Client.ClientModel();
                   //  outputThread.shutdown();
                 }
                 break;

@@ -1,3 +1,12 @@
+package Client;
+
+import ChatLog.ChatLogHandler;
+import FileHandler.FileHandler;
+import Messaging.ClientMessageHandler;
+import Messaging.PDU;
+import Messaging.PduHandler;
+import User.User;
+
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetAddress;

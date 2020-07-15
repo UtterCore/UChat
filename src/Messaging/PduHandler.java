@@ -1,3 +1,5 @@
+package Messaging;
+
 import java.util.ArrayList;
 
 public class PduHandler {
@@ -249,8 +251,8 @@ public class PduHandler {
     }
 
     public class PDU_LOGIN extends PDU {
-        String username;
-        String password;
+        public String username;
+        public String password;
 
         private PDU_LOGIN(String username, String password) {
             type = LOGIN_REQUEST_PDU;
@@ -265,9 +267,9 @@ public class PduHandler {
     }
 
     public class PDU_CREATE_USER extends PDU {
-        String email;
-        String username;
-        String password;
+        public String email;
+        public String username;
+        public String password;
 
         private PDU_CREATE_USER(String email, String username, String password) {
             type = CREATE_USER_REQUEST_PDU;
@@ -283,7 +285,7 @@ public class PduHandler {
     }
 
     public class PDU_LOGIN_RESPONSE extends PDU {
-        int status;
+        public int status;
 
         private PDU_LOGIN_RESPONSE(int status) {
             type = LOGIN_RESPONSE_PDU;

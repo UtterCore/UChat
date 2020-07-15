@@ -1,4 +1,4 @@
-/*
+package GUI;/*
  * Class: GUI
  * Date: 10/1 2019
  * Author: Erik Rostö

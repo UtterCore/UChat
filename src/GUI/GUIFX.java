@@ -1,3 +1,4 @@
+package GUI;
 
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;

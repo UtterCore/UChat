@@ -1,3 +1,8 @@
+package Messaging;
+
+import User.User;
+import FileHandler.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -77,7 +82,7 @@ public class ClientMessageHandler {
     }
 
     public void sendUserInfo() {
-        //PDU pdu = PduHandler.getInstance().create_chatinfo_pdu(user.getUsername());
+        //Messaging.PDU pdu = Messaging.PduHandler.getInstance().create_chatinfo_pdu(user.getUsername());
         PDU pdu = PduHandler.getInstance().create_login_pdu(user.getUsername(), "password");
         enqueuePDU(pdu);
     }
@@ -142,7 +147,7 @@ public class ClientMessageHandler {
                 try {
                     input = SocketIO.getInput(is);
                 } catch (IOException e) {
-                   // incomingPDUQueue.add(PduHandler.getInstance().create_msg_pdu("No response from the server. Exit application.", null, user.getFullName()));
+                   // incomingPDUQueue.add(Messaging.PduHandler.getInstance().create_msg_pdu("No response from the server. Exit application.", null, user.getFullName()));
                     //quit();
                     System.out.println("Exception, no response from server");
                     break;

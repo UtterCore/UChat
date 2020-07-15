@@ -1,3 +1,7 @@
+package ChatLog;
+
+import Messaging.PduHandler;
+
 import java.util.LinkedList;
 import java.util.Queue;
 

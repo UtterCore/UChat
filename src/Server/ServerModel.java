@@ -1,3 +1,10 @@
+package Server;
+
+import Messaging.PDU;
+import Messaging.PduHandler;
+import Messaging.SocketIO;
+import User.User;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -155,7 +162,7 @@ public class ServerModel {
             System.out.println("forward chat msg: " + message);
             PDU msgPdu = PduHandler.getInstance().create_msg_pdu(message, from.getFullName(), to);
             SocketIO.sendPDU(getWriter(), msgPdu);
-            //SocketIO.sendMessage(SocketIO.TYPE_MESSAGE, from, getWriter(), message);
+            //Messaging.SocketIO.sendMessage(Messaging.SocketIO.TYPE_MESSAGE, from, getWriter(), message);
         }
 
         private void sendChatInfoPDU(User from) {
@@ -166,7 +173,7 @@ public class ServerModel {
                 chatInfoPDU = PduHandler.getInstance().create_chatinfo_pdu(from.getFullName());
             }
             SocketIO.sendPDU(getWriter(), chatInfoPDU);
-            //SocketIO.sendMessage(SocketIO.TYPE_MESSAGE, from, getWriter(), message);
+            //Messaging.SocketIO.sendMessage(Messaging.SocketIO.TYPE_MESSAGE, from, getWriter(), message);
         }
 
         private void sendUserListPDU(ArrayList<User> userlist) {

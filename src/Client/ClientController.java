@@ -19,10 +19,6 @@ import java.util.concurrent.TimeUnit;
 
 public class ClientController {
 
-    private static final int STATE_LOGIN = 0;
-    private static final int STATE_CHAT = 1;
-    private static final int STATE_FRIENDS = 2;
-
     private static final String IP_GLOBAL = "2.249.12.98";
     private static final String IP_LOCAL = "192.168.1.70";
     private static final int PORT = 4001;
@@ -45,44 +41,24 @@ public class ClientController {
         initLogin();
     }
 
-    private void changeState(int newState) {
-        if (currentState == STATE_CHAT && newState == STATE_LOGIN) {
-            //outputThread.shutdown();
-        }
-        currentState = newState;
-    }
 
     private void initLogin() {
-        changeState(STATE_LOGIN);
-        System.out.println("state login");
-
         guifx.showLogin();
-        addSubmitListeners();
+
+        guifx.getUserTextField().setOnAction(submitLoginEventHandler());
+        guifx.getUserSubmitButton().setOnAction(submitLoginEventHandler());
     }
 
     private void initChat(String username) {
-        changeState(STATE_CHAT);
-
         guifx.showChat(username);
-        guifx.setChatCloseEvent(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
-                client.setTarget(null);
-                client.setChatPartner(null);
-            }
-        });
+        guifx.setChatCloseEvent(closeChatEventHandler());
 
-        addSubmitListeners();
-
-        //client.getOldMessages(username);
+        guifx.getChatField().setOnAction(submitChatEventHandler());
+        guifx.getChatSubmitButton().setOnAction(submitChatEventHandler());
+        client.getOldMessages(username);
     }
 
 
-    private void updateChatLogs(ArrayList<String> users) {
-        for (String user : users) {
-            client.getOldMessages(user);
-        }
-    }
 
     private void initFriends() {
        Platform.runLater(() -> guifx.showFriendlist(client.getUser().getFullName()));
@@ -91,7 +67,7 @@ public class ClientController {
     private void startChatWith(String username) {
         initChat(username);
 
-        client.setTarget(username);
+        //client.setTarget(username);
         client.setChatPartner(username);
 
         Platform.runLater(() -> {
@@ -113,48 +89,27 @@ public class ClientController {
 
     }
 
-    private void addSubmitListeners() {
-        switch (currentState) {
-            case STATE_LOGIN: {
-                guifx.getUserTextField().setOnAction(submitLoginEventHandler());
-                guifx.getUserSubmitButton().setOnAction(submitLoginEventHandler());
-                break;
-            }
-            case STATE_FRIENDS: {
-
-                break;
-            }
-            case STATE_CHAT: {
-                guifx.getChatField().setOnAction(submitChatEventHandler());
-                guifx.getChatSubmitButton().setOnAction(submitChatEventHandler());
-                break;
-            }
-        }
-    }
-
     private void handleLoginSubmit() {
         guifx.clearError();
 
-        //if has not yet logged in
+        String enteredUsername = guifx.getUserTextField().getText();
+        if (enteredUsername.length() == 0) {
+            guifx.showUsernameError();
+            return;
+        }
 
-        if (client.getUser() == null) {
-            String textAreaContent = guifx.getUserTextField().getText();
-            if (textAreaContent.length() == 0) {
-                guifx.showUsernameError();
+        Platform.runLater(() -> guifx.showConnecting());
+
+        new Thread(() -> {
+            guifx.lockLoginScreen();
+            if (connect(enteredUsername)) {
+            } else {
+                Platform.runLater(() -> guifx.showConnectionError());
                 return;
             }
+            guifx.unlockLoginScreen();
+        }).start();
 
-            Platform.runLater(() -> guifx.showConnecting());
-
-            new Thread(() -> {
-                guifx.lockLoginScreen();
-                if (connect(textAreaContent)) {
-                } else {
-                    Platform.runLater(() -> guifx.showConnectionError());
-                }
-                guifx.unlockLoginScreen();
-            }).start();
-        }
     }
 
     private void handleChatSubmit() {
@@ -185,8 +140,18 @@ public class ClientController {
         };
     }
 
+    private EventHandler<WindowEvent> closeChatEventHandler() {
+        return new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent event) {
+                //client.setTarget(null);
+                client.setChatPartner(null);
+            }
+        };
+    }
+
     private boolean connect(String username) {
-        return (client.connectToChatServer(username, "localhost", IP_LOCAL, PORT));
+        return (client.connectToChatServer(username, "localhost", PORT));
     }
 
     private void sendMessage(String message, String target) {
@@ -272,13 +237,15 @@ public class ClientController {
             case PduHandler.LOGIN_RESPONSE_PDU: {
                 PduHandler.PDU_LOGIN_RESPONSE responsePDU = (PduHandler.PDU_LOGIN_RESPONSE)pdu;
 
-                if (responsePDU.status == 1) {
+                if (responsePDU.status == GUIFX.LOGIN_SUCCESS) {
                     initFriends();
                     client.login();
                 } else {
                     guifx.showLoginError(GUIFX.WRONG_CREDENTIALS);
                     client.killUser();
                     client.shutDownConnection();
+
+                    client = new ClientModel();
                     //client = new Client.ClientModel();
                   //  outputThread.shutdown();
                 }
@@ -311,7 +278,7 @@ public class ClientController {
                 return;
             }
         }
-        updateChatLogs(userlist);
+        //client.updateChatLogs(userlist);
 
         Platform.runLater(() -> guifx.clearFriendlist());
         for (String friend : userlist) {

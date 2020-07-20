@@ -20,7 +20,7 @@ import javafx.stage.WindowEvent;
 
 public class GUIFX {
 
-    public static final int LOGIN_FAILED = 1;
+    public static final int LOGIN_SUCCESS = 1;
     public static final int WRONG_CREDENTIALS = 2;
 
     private Stage stage;
@@ -264,7 +264,7 @@ public class GUIFX {
         friendName.getStyleClass().add("friendlist_item_text");
         friendName.setFill(Color.WHITE);
 
-        if (unreadMessages == 0) {
+        if (unreadMessages <= 0) {
             friendName.setText(name);
         } else {
             friendName.setText(name + " (" + unreadMessages + ")");

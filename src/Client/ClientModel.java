@@ -60,15 +60,15 @@ public class ClientModel {
             chatLogHandler.addToLog(oldPdu, username);
         }
     }
-    public void connectToServer(String address, int port) throws IOException {
-        sSocket = new Socket(InetAddress.getByName(address), port);
 
-        cmh = new ClientMessageHandler(user, sSocket);
-        cmh.startIO();
-        cmh.sendUserInfo();
+    public void updateChatLogs(ArrayList<String> users) {
+        for (String user : users) {
+            getOldMessages(user);
+        }
     }
 
     public void shutDownConnection() {
+        cmh.closeThreads();
         try {
             sSocket.close();
         } catch (IOException e) {
@@ -80,27 +80,21 @@ public class ClientModel {
     }
 
 
-    public boolean connectToChatServer(String username, String globalAddress, String localAddress, int port) {
+    public boolean connectToChatServer(String username, String address, int port) {
         createUser(username);
 
         try {
-            //try global
-            connectToServer(globalAddress, port);
-        } catch (ConnectException b) {
+            sSocket = new Socket(InetAddress.getByName(address), port);
 
-            //try local
-//            cmh.sendToMe("No response. Trying to access locally...", null);
-            try {
-                connectToServer(localAddress, port);
-            } catch (IOException io) {
-       //         cmh.sendToMe("No response from chat server. Shutting down", null);
-                user = null;
-                return false;
-            }
-        } catch (IOException e) {
-             e.printStackTrace();
+            cmh = new ClientMessageHandler(user, sSocket);
+            cmh.sendUserInfo();
+
+        } catch (IOException b) {
+            System.out.println("wrong something");
+            user = null;
+            cmh = null;
+            return false;
         }
-
 
         return true;
     }
@@ -123,9 +117,11 @@ public class ClientModel {
         cmh.prepareAndSend(message, target);
     }
 
+    /*
     public void setTarget(String username) {
         cmh.sendSetTarget(username);
     }
+    */
 
     public void sendIsLeaving() {
         cmh.sendIsLeaving();

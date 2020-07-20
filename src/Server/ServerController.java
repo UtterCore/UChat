@@ -41,6 +41,18 @@ public class ServerController {
                     }
                     case "/online": {
                         System.out.println(server.getUserList().size() + " users online");
+                        break;
+                    }
+                    case "/threads": {
+                        System.out.println("Threads: ");
+                        int i = 0;
+                        for (ServerModel.ServerThread thread : server.getServerThreads()) {
+                            if (thread.getUser() != null) {
+                                System.out.println("#" + i++ + " " + thread.getUser().getFullName());
+                            }
+                        }
+                        System.out.print("\n");
+                        break;
                     }
                 }
             }

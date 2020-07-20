@@ -132,7 +132,6 @@ public class ServerModel {
 
             userList.remove(user);
 
-
             inputScanner.close();
             writer.close();
 
@@ -160,7 +159,7 @@ public class ServerModel {
 
         private void sendChatMessage(User from, String to, String message) {
             System.out.println("forward chat msg: " + message);
-            PDU msgPdu = PduHandler.getInstance().create_msg_pdu(message, from.getFullName(), to);
+            PDU msgPdu = PduHandler.getInstance().create_msg_pdu(message, from.getFullName(), to, false);
             SocketIO.sendPDU(getWriter(), msgPdu);
             //Messaging.SocketIO.sendMessage(Messaging.SocketIO.TYPE_MESSAGE, from, getWriter(), message);
         }

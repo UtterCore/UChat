@@ -59,11 +59,10 @@ public class ClientMessageHandler {
     public void prepareAndSend(String input, String target) {
         PDU message_pdu;
 
-        System.out.println("prepareandsend input " + input);
         if (input.startsWith("/")) {
             message_pdu = PduHandler.getInstance().create_cmd_pdu(input.substring(1), user.getFullName());
         } else {
-            message_pdu = PduHandler.getInstance().create_msg_pdu(input, user.getFullName(), target);
+            message_pdu = PduHandler.getInstance().create_msg_pdu(input, user.getFullName(), target, false);
         }
 
 
@@ -73,7 +72,7 @@ public class ClientMessageHandler {
     }
 
     public void sendToMe(String input, String from) {
-        enqueuePDU(PduHandler.getInstance().create_msg_pdu(input, from, from));
+        enqueuePDU(PduHandler.getInstance().create_msg_pdu(input, from, from, false));
     }
 
     public void sendSetTarget(String target) {

@@ -3,11 +3,14 @@ package ChatLog;
 import Messaging.PduHandler;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 public class ChatLogHandler {
 
     private ArrayList<ChatLog> chatLogs;
+
     public ChatLogHandler() {
         chatLogs = new ArrayList<>();
     }
@@ -74,12 +77,32 @@ public class ChatLogHandler {
         }
     }
 
-    public int getUnreadMessages(String username) {
+    /*
+    public void setHasReadChatLog(String username) {
         if (findLogByUsername(username) == null) {
-            return 0;
-        } else {
-            return findLogByUsername(username).getMessageQueue().size();
+            return;
         }
+        ArrayList<PduHandler.PDU_MESSAGE> messageList = (ArrayList<PduHandler.PDU_MESSAGE>)findLogByUsername(username).getMessageQueue();
+        for (PduHandler.PDU_MESSAGE message : messageList) {
+            message.isRead = true;
+        }
+    }
+    */
+    public int getUnreadMessages(String username) {
+        int unreadMessages = -1;
+
+        if (findLogByUsername(username) != null) {
+            Queue<PduHandler.PDU_MESSAGE> log = new LinkedList<>(findLogByUsername(username).getMessageQueue());
+            unreadMessages = 0;
+            while (!log.isEmpty()) {
+                PduHandler.PDU_MESSAGE message = log.poll();
+                if (!message.isRead) {
+                    unreadMessages++;
+                }
+            }
+        }
+
+        return unreadMessages;
     }
     private ChatLog findLogByUsername(String username) {
         for (ChatLog chatLog : chatLogs) {

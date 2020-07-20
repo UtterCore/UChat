@@ -54,14 +54,10 @@ public class ClientModel {
     }
 
     public void getOldMessages(String username) {
-        System.out.println("Searching old messages for " + user.getFullName());
         ArrayList<PduHandler.PDU_MESSAGE> oldMessages = FileHandler.getMessages(user.getFullName(), username);
 
         for (PduHandler.PDU_MESSAGE oldPdu : oldMessages) {
-            //cmh.sendHistory(oldPdu.message, oldPdu.sender);
             chatLogHandler.addToLog(oldPdu, username);
-            //chatLogHandler.addToLogs(oldPdu);
-            System.out.println("sending old pdu: " + oldPdu.message);
         }
     }
     public void connectToServer(String address, int port) throws IOException {

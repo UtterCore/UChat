@@ -25,9 +25,8 @@ public class PduHandler {
         return pduHandler;
     }
 
-    public PDU_MESSAGE create_msg_pdu(String message, String sender, String target) {
-        System.out.println("creating msg pdu: " + message);
-        return new PDU_MESSAGE(message, sender, target);
+    public PDU_MESSAGE create_msg_pdu(String message, String sender, String target, boolean isRead) {
+        return new PDU_MESSAGE(message, sender, target, isRead);
     }
 
     public PDU_COMMAND create_cmd_pdu(String command, String sender) {
@@ -80,7 +79,7 @@ public class PduHandler {
             switch (Integer.parseInt(parts[0])) {
                 case MESSAGE_PDU: {
 
-                    return create_msg_pdu(parts[3], parts[1], parts[2]);
+                    return create_msg_pdu(parts[4], parts[1], parts[2], Boolean.parseBoolean(parts[3]));
                 }
                 case COMMAND_PDU: {
                    // System.out.println("Command pdu found");
@@ -137,8 +136,9 @@ public class PduHandler {
         public String message;
         public String sender;
         public String target;
+        public boolean isRead;
 
-        private PDU_MESSAGE(String message, String sender, String target) {
+        private PDU_MESSAGE(String message, String sender, String target, boolean isRead) {
             type = MESSAGE_PDU;
             if (sender == null) {
                 sender = " ";
@@ -146,11 +146,12 @@ public class PduHandler {
             this.message = message;
             this.sender = sender;
             this.target = target;
+            this.isRead = isRead;
         }
 
         @Override
         public String toString() {
-            return type + ";" + sender + ";" + target + ";" + message;
+            return type + ";" + sender + ";" + target + ";" + String.valueOf(isRead) + ";" + message;
         }
     }
 

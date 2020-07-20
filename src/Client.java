@@ -18,31 +18,19 @@ import Client.*;
 public class Client extends Application {
 
 
-    ClientController controller;
+    private ClientController controller;
 
     public static void main(String args[]) {
-
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) {
         controller = new ClientController(new GUIFX(primaryStage));
-
-        /*try {
-            Parent root = FXMLLoader.load(getClass().getResource("/src/FXMLTest.fxml"));
-            Scene scene = new Scene(root, 800, 500);
-            primaryStage.setScene(scene);
-            primaryStage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        */
     }
 
     @Override
     public void stop() throws Exception {
-        System.out.println("stop!");
         controller.quit();
     }
 }

@@ -1,5 +1,6 @@
 package Client;
 
+import ChatLog.ChatLogHandler;
 import FileHandler.FileHandler;
 import GUI.GUIFX;
 import Messaging.PDU;
@@ -72,7 +73,15 @@ public class ClientController {
         });
 
         addSubmitListeners();
-        client.getOldMessages(username);
+
+        //client.getOldMessages(username);
+    }
+
+
+    private void updateChatLogs(ArrayList<String> users) {
+        for (String user : users) {
+            client.getOldMessages(user);
+        }
     }
 
     private void initFriends() {
@@ -89,6 +98,8 @@ public class ClientController {
 
             if (client.getChatLogHandler().hasMessages(username)) {
                 guifx.addTextToChat("Showing older messages from: " + username + "\n");
+
+                //TODO: make this only add unread messages to chat instead of all of them (maybe)
                 Queue<PduHandler.PDU_MESSAGE> unreadMessages = client.getChatLogHandler().getFullChatLog(username);
 
                 while (!unreadMessages.isEmpty()) {
@@ -289,36 +300,46 @@ public class ClientController {
     }
     private void updateFriendlist(ArrayList<String> userlist) {
 
+        boolean listHasChanged = false;
+
         if (currentFriendlist == null) {
             currentFriendlist = new ArrayList<>(userlist);
+            listHasChanged = true;
         } else {
             if (currentFriendlist.equals(userlist)) {
                 //no update
                 return;
             }
         }
+        updateChatLogs(userlist);
+
         Platform.runLater(() -> guifx.clearFriendlist());
         for (String friend : userlist) {
             if (!friend.equals(client.getUser().getFullName())) {
 
                 int unreadMessages = client.getChatLogHandler().getUnreadMessages(friend);
+                System.out.println("Unread from " + friend + ": " + unreadMessages);
+                listHasChanged = true;
 
-                Platform.runLater(() -> {
+                if (listHasChanged) {
+                    Platform.runLater(() -> {
 
-                    boolean isCurrentChatPartner = false;
+                        boolean isCurrentChatPartner = false;
 
-                    if (client.getChatPartner() != null) {
-                        if (client.getChatPartner().equals(friend)) {
-                            isCurrentChatPartner = true;
+                        if (client.getChatPartner() != null) {
+                            if (client.getChatPartner().equals(friend)) {
+                                isCurrentChatPartner = true;
+                            }
                         }
-                    }
-                    guifx.addToFriendList(friend, unreadMessages, isCurrentChatPartner).setOnMouseClicked(new EventHandler<MouseEvent>() {
-                        @Override
-                        public void handle(MouseEvent event) {
-                            startChatWith(friend);
-                        }
+
+                        guifx.addToFriendList(friend, unreadMessages, isCurrentChatPartner).setOnMouseClicked(new EventHandler<MouseEvent>() {
+                            @Override
+                            public void handle(MouseEvent event) {
+                                startChatWith(friend);
+                            }
+                        });
                     });
-                });
+                }
             }
         }
     }

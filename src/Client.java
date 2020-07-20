@@ -4,12 +4,8 @@ import javafx.stage.Stage;
 import Client.*;
 
         /*
-        TODO: Handle a partner that exits while talking
-        TODO: JavaFX
-        TODO: Buttons for sending/reponding to chat requests
-        TODO: Friend list
-        TODO: Make outputqueue for server
-        TODO: Save chats locally (JSON)!
+        TODO: Unread message indicator
+        TODO: Sanitize input from ";" (login, chat etc)
         TODO: Create/log in to old account
         TODO: (later) Save user data with SQL
          */

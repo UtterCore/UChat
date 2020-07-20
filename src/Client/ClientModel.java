@@ -75,7 +75,6 @@ public class ClientModel {
             e.printStackTrace();
         }
         sSocket = null;
-        cmh = null;
         chatLogHandler = null;
     }
 
@@ -125,5 +124,6 @@ public class ClientModel {
 
     public void sendIsLeaving() {
         cmh.sendIsLeaving();
+        cmh = null;
     }
 }

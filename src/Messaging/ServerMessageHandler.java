@@ -9,8 +9,5 @@ public class ServerMessageHandler extends MessageHandler {
         startIO(1, 10);
     }
 
-    public void sendAndClose(PDU pdu) {
-        SocketIO.sendPDU(writer, pdu);
-        closeThreads();
-    }
+
 }

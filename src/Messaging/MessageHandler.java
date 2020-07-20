@@ -70,6 +70,11 @@ public abstract class MessageHandler {
         }
     };
 
+    public void sendAndClose(PDU pdu) {
+        SocketIO.sendPDU(writer, pdu);
+        closeThreads();
+    }
+
     private Runnable inputThread = new Runnable() {
         @Override
         public void run() {
@@ -77,7 +82,9 @@ public abstract class MessageHandler {
             try {
                 input = SocketIO.getInput(socket.getInputStream());
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Socket error, closing Msghandler IO");
+                closeThreads();
+                //e.printStackTrace();
                 return;
             }
 

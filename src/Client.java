@@ -4,6 +4,7 @@ import javafx.stage.Stage;
 import Client.*;
 
         /*
+        TODO: Timeout for server threads (if a user crashes etc)
         TODO: Unread message indicator
         TODO: Sanitize input from ";" (login, chat etc)
         TODO: Create/log in to old account

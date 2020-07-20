@@ -23,25 +23,6 @@ public class ServerModel {
     public ServerModel() {
         userList = new ArrayList<>();
         serverThreads = new ArrayList<>();
-
-
-        /*
-        new Thread(() -> {
-
-                while (true) {
-                    if (!serverThreads.isEmpty()) {
-                    ArrayList<ServerThread> threads = new ArrayList<>(serverThreads);
-
-                    for (Thread serverThread : threads) {
-                        if (!serverThread.isAlive()) {
-                            serverThreads.remove(serverThread);
-                            System.out.println("Removing dead thread from list");
-                        }
-                    }
-                }
-            }
-        }).start();
-        */
     }
 
     public ArrayList<User> getUserList() {
@@ -182,9 +163,7 @@ public class ServerModel {
                 user = new User(username, 0);
                 user.setId(getFirstId(user.getUsername()));
                 userList.add(user);
-                System.out.println("Login success, added: " + user.getFullName());
                 if (findThreadByName(user.getFullName()) != null) {
-                    System.out.println("This thread exists!!");
                 }
 
             } else if (loginAccepted == 0) {
@@ -249,6 +228,7 @@ public class ServerModel {
                 }
             }
             System.out.println("Serverthread closing");
+            serverThreads.remove(this);
         }
     }
 }

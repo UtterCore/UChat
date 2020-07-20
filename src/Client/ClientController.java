@@ -330,7 +330,6 @@ public class ClientController {
                 if (!client.getIncomingMessageQueue().isEmpty()) {
                     handlePDU(client.getIncomingMessageQueue().poll());
                 }
-            } else {
             }
         }
     };

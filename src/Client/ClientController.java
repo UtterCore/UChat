@@ -3,6 +3,8 @@ package Client;
 import ChatLog.ChatLogHandler;
 import FileHandler.FileHandler;
 import GUI.GUIFX;
+import Messaging.ErrorMessage;
+import Messaging.InputHandler;
 import Messaging.PDU;
 import Messaging.PduHandler;
 import javafx.application.Platform;
@@ -93,8 +95,10 @@ public class ClientController {
         guifx.clearError();
 
         String enteredUsername = guifx.getUserTextField().getText();
-        if (enteredUsername.length() == 0) {
-            guifx.showUsernameError();
+
+        ErrorMessage usernameStatus = InputHandler.checkUsername(enteredUsername);
+        if (usernameStatus != ErrorMessage.INPUT_OK) {
+            guifx.showUsernameError(usernameStatus.getErrorMessage());
             return;
         }
 

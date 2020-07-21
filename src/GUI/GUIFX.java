@@ -67,9 +67,9 @@ public class GUIFX {
     }
 
 
-    public void showUsernameError() {
+    public void showUsernameError(String errorMessage) {
         actiontarget.setFill(Color.FIREBRICK);
-        actiontarget.setText("Invalid username");
+        actiontarget.setText(errorMessage);
     }
 
     public void showConnectionError() {

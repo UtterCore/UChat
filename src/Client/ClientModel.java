@@ -108,7 +108,7 @@ public class ClientModel {
         cmh.startUserListUpdater();
     }
     private void createUser(String username) {
-        user = new User(username, 0);
+        user = new User(username, "password");
         chatLogHandler = new ChatLogHandler(user);
     }
 

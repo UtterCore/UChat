@@ -149,24 +149,36 @@ public class ServerModel {
             smh.enqueuePDU(userlistPDU);
         }
 
+        boolean checkCredentials(String username, String password) {
+
+            return (UserJSONHandler.userExists(username, password));
+        }
+
+        void handleCreateUser(String username, String password) {
+
+            User newUser = new User(username, password);
+            newUser.setId(getFirstId(username));
+            userList.add(user);
+
+            UserJSONHandler.saveUserToFile(user);
+        }
+
         void handleLogin(String username, String password) {
 
-            int loginAccepted = 1;
-            if (username.equals("wrong")) {
-                loginAccepted = 0;
+            int status = 0;
+            boolean loginAccepted = checkCredentials(username, password);
+
+            if (loginAccepted) {
+                status = 1;
             }
 
-            PduHandler.PDU_LOGIN_RESPONSE loginResponse = PduHandler.getInstance().create_login_response(loginAccepted);
+            PduHandler.PDU_LOGIN_RESPONSE loginResponse = PduHandler.getInstance().create_login_response(status);
 
-            if (loginAccepted == 1) {
+            if (loginAccepted) {
                 smh.enqueuePDU(loginResponse);
-                user = new User(username, 0);
-                user.setId(getFirstId(user.getUsername()));
+                user = UserJSONHandler.getUserFromFile(username);
                 userList.add(user);
-                if (findThreadByName(user.getFullName()) != null) {
-                }
-
-            } else if (loginAccepted == 0) {
+            } else {
                 smh.sendAndClose(loginResponse);
                 smh = null;
                 try {

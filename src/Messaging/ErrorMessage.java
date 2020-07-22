@@ -6,7 +6,8 @@ public enum ErrorMessage {
     USERNAME_EMPTY(2, "Username is empty"),
     INVALID_CHARACTERS(3, "Username contains special characters"),
     USERNAME_TOO_LONG(4, "Username is too long"),
-    CHATMESSAGE_EMPTY(5, "Message is empty");
+    CHATMESSAGE_EMPTY(5, "Message is empty"),
+    WRONG_CREDENTIALS(6, "Wrong username or password");
 
     private int messageId;
     private String errorMessage;

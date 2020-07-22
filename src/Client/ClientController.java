@@ -250,8 +250,6 @@ public class ClientController {
                     client.shutDownConnection();
 
                     client = new ClientModel();
-                    //client = new Client.ClientModel();
-                  //  outputThread.shutdown();
                 }
                 break;
             }

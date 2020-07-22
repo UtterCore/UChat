@@ -44,7 +44,7 @@ public class ClientMessageHandler extends MessageHandler {
     }
 
     public void sendUserInfo() {
-        PDU pdu = PduHandler.getInstance().create_login_pdu(user.getUsername(), "password");
+        PDU pdu = PduHandler.getInstance().create_login_pdu(user.getUsername(), user.getPassword());
         enqueuePDU(pdu);
     }
 

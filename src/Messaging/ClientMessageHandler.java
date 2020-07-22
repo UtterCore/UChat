@@ -39,26 +39,18 @@ public class ClientMessageHandler extends MessageHandler {
             message_pdu = PduHandler.getInstance().create_msg_pdu(input, user.getFullName(), target, false);
         }
 
-
         FileHandler.savePDUToFile(message_pdu, user.getFullName());
-
         enqueuePDU(message_pdu);
     }
 
-    public void sendToMe(String input, String from) {
-        enqueuePDU(PduHandler.getInstance().create_msg_pdu(input, from, from, false));
-    }
-
     public void sendUserInfo() {
-        //Messaging.PDU pdu = Messaging.PduHandler.getInstance().create_chatinfo_pdu(user.getUsername());
         PDU pdu = PduHandler.getInstance().create_login_pdu(user.getUsername(), "password");
         enqueuePDU(pdu);
     }
 
     public void sendIsLeaving() {
         PDU pdu = PduHandler.getInstance().create_is_leaving_pdu();
-
-        SocketIO.sendPDU(writer, pdu);
+        SocketIO.sendPDU(getWriter(), pdu);
     }
 
     private Runnable updater = new Runnable() {
@@ -71,7 +63,7 @@ public class ClientMessageHandler extends MessageHandler {
         @Override
         public void run() {
 
-            if (writer != null) {
+            if (getWriter() != null) {
                 sendUserlistRequestPDU();
             }
         }

@@ -18,6 +18,9 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
+import java.util.ArrayList;
+
+//TODO: Empty friends-grejen måste bli remove:ad när någon vän finns!!
 public class GUIFX {
 
     public static final int LOGIN_SUCCESS = 1;
@@ -39,15 +42,21 @@ public class GUIFX {
     private VBox friendsBox;
     private VBox FLBox;
 
+    private Text emptyFriendsText;
+
     private Label chattingWith;
 
     private boolean partnerOnline;
 
     Stage chatStage;
 
-    public GUIFX(Stage stage) {
+    ArrayList<Friend> friends;
 
+    public GUIFX(Stage stage) {
+        friends = new ArrayList<>();
         this.stage = stage;
+        emptyFriendsText = new Text("No friends online :(");
+        emptyFriendsText.setFill(Color.WHITE);
     }
 
     public Button getUserSubmitButton() {
@@ -256,47 +265,14 @@ public class GUIFX {
         chatArea.clear();
     }
 
-    public VBox buildFriendlistItem(String name, int unreadMessages, boolean isChatting) {
-        VBox friendlistItem = new VBox(5);
-        friendlistItem.getStyleClass().add("friendlist_item");
-
-        Text friendName = new Text();
-        friendName.getStyleClass().add("friendlist_item_text");
-        friendName.setFill(Color.WHITE);
-
-        if (unreadMessages <= 0) {
-            friendName.setText(name);
-        } else {
-            friendName.setText(name + " (" + unreadMessages + ")");
-        }
-        if (!isChatting) {
-            friendName.setFont(Font.font("Tahoma", FontWeight.NORMAL, 12));
-        } else {
-            friendName.setFont(Font.font("Tahoma", FontWeight.BOLD, 12));
-        }
-
-        friendlistItem.getChildren().add(friendName);
-
-        friendlistItem.setBorder(new Border(new BorderStroke(Color.GRAY, BorderStrokeStyle.SOLID, null, new BorderWidths(1))));
-        friendlistItem.setPadding(new Insets(0, 10, 0, 10));
-
-        friendlistItem.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent mouseEvent) {
-                if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
-                    System.out.println("click on " + name);
-                }
-            }
-        });
-
-        return friendlistItem;
-    }
-
     public void sendEmptyFriendlist() {
-        Text emptyText = new Text("No friends online :(");
-        emptyText.getStyleClass().add("friendlist_item_text");
-        emptyText.setFill(Color.WHITE);
-        friendsBox.getChildren().add(emptyText);
+
+        friends = new ArrayList<>();
+        emptyFriendsText.setVisible(true);
+        //Text emptyText = new Text("No friends online :(");
+        //emptyText.getStyleClass().add("friendlist_item_text");
+        //emptyText.setFill(Color.WHITE);
+        //friendsBox.getChildren().add(emptyText);
     }
     public void showFriendlist(String username) {
         stage.setTitle("UChat - Friends");
@@ -307,6 +283,8 @@ public class GUIFX {
         FLBox.setPadding(new Insets(0, 0, 20, 0));
 
         friendsBox = new VBox();
+
+        //friendsBox.getChildren().add(emptyFriendsText);
 
         VBox FLTopBox = new VBox();
         FLTopBox.getStyleClass().add("friendlist_topbar");
@@ -335,15 +313,134 @@ public class GUIFX {
       //  stage.show();
     }
 
+    public class Friend {
+        public String username;
+        public String visibleName;
+        public int unreadMessages;
+        public boolean isChatting;
+        public VBox vbox;
+        public Text friendName;
+
+        public Friend(String username) {
+            this.username = username;
+            this.unreadMessages = unreadMessages;
+            this.isChatting = isChatting;
+            visibleName = username;
+
+            friendName = new Text(visibleName);
+
+            vbox = new VBox(5);
+            vbox.getStyleClass().add("friendlist_item");
+
+            friendName.getStyleClass().add("friendlist_item_text");
+            friendName.setFill(Color.WHITE);
+
+            vbox.getChildren().add(friendName);
+
+            vbox.setBorder(new Border(new BorderStroke(Color.GRAY, BorderStrokeStyle.SOLID, null, new BorderWidths(1))));
+            vbox.setPadding(new Insets(0, 10, 0, 10));
+        }
+
+        public void changeVisibleName(String newName) {
+            System.out.println("changing text to: " + newName);
+            visibleName = newName;
+            friendName.setText(newName);
+         //   vbox = buildFriendlistItem(friendName, unreadMessages, isChatting);
+        }
+
+        public void resetName() {
+            visibleName = username;
+            changeVisibleName(visibleName);
+            vbox.getStyleClass().clear();
+            vbox.getStyleClass().add("friendlist_item");
+            friendName.setFill(Color.WHITE);
+        }
+    }
     public void clearFriendlist() {
 
-        friendsBox.getChildren().clear();
+        //friendsBox.getChildren().clear();
+        //friends = new ArrayList<>();
     }
 
-    public VBox addToFriendList(String username, int unreadMessages, boolean isChatting) {
-        VBox newFriendItem = buildFriendlistItem(username, unreadMessages, isChatting);
+    public void setHasSentMessages(String username) {
+        for (Friend friend : friends) {
+            if (friend.username.equals(username)) {
 
-        friendsBox.getChildren().add(newFriendItem);
-        return newFriendItem;
+              //  friend.friendName.getStyleClass().add("friendlist_has_sent_message");
+                friend.friendName.setFill(Color.ORANGE);
+                friend.vbox.getStyleClass().clear();
+                friend.vbox.getStyleClass().add("friendlist_item_unread");
+            }
+        }
+    }
+
+    public void resetName(String username) {
+        for (Friend friend : friends) {
+            if (friend.username.equals(username)) {
+                friend.resetName();
+            }
+        }
+    }
+
+    public Friend findFriendWithUsername(String username) {
+        for (Friend friend : friends) {
+            if (friend.username.equals(username)) {
+
+                return friend;
+            }
+        }
+        return null;
+    }
+
+    private boolean isInList(Friend user, ArrayList<String> friendList) {
+
+        for (String friend : friendList) {
+            if (user.username.equals(friend)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /*TODO: check if the friend is already in the list. then there is no need to
+      create a new object (it still doesn't work. Friendlistupdate
+      resets colour change!!!
+      */
+    public void addFriendsToList(ArrayList<String> newFriends, String username) {
+
+        emptyFriendsText.setVisible(false);
+        emptyFriendsText.setDisable(true);
+
+        for (Friend friend : friends) {
+            if (!isInList(friend, newFriends)) {
+                removeFriendFromList(friend);
+            }
+        }
+
+        for (String newFriend : newFriends) {
+            if (!newFriend.equals(username)) {
+                addToFriendList(newFriend);
+            }
+        }
+    }
+
+    public void removeFriendFromList(Friend friend) {
+
+        friends.remove(friend);
+        friendsBox.getChildren().remove(friend.vbox);
+    }
+    public VBox addToFriendList(String username) {
+
+
+        if (findFriendWithUsername(username) == null) {
+            Friend friend = new Friend(username);
+
+            friends.add(friend);
+
+            friendsBox.getChildren().add(friend.vbox);
+            return friend.vbox;
+        } else {
+            return findFriendWithUsername(username).vbox;
+        }
     }
 }

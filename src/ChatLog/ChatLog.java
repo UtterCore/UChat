@@ -8,6 +8,7 @@ import java.util.Queue;
 public class ChatLog {
 
     private String username;
+    private String target;
     private Queue<PduHandler.PDU_MESSAGE> messageQueue;
 
     public ChatLog(String username) {

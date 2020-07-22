@@ -23,10 +23,24 @@
     -fx-border-color: #888888;
 }
 
+.friendlist_item_unread {
+    -fx-padding: 10px;
+    -fx-background-color: #3e3e3e;
+    -fx-border-color: ORANGE;
+}
+
+.friendlist_item_unread:hover {
+    -fx-background-color: #888888;
+    -fx-border-color: ORANGE;
+}
+
 .friendlist_item_text {
     -fx-font-size: 13px;
 }
 
+.friendlist_has_sent_message {
+    -fx-text-fill: orange;
+}
 .chat_textarea {
     -fx-background-color: #888888;
     text-area-background: black ;

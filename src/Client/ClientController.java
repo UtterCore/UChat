@@ -58,6 +58,8 @@ public class ClientController {
         guifx.getChatField().setOnAction(submitChatEventHandler());
         guifx.getChatSubmitButton().setOnAction(submitChatEventHandler());
         client.getOldMessages(username);
+
+        Platform.runLater(() -> guifx.resetName(username));
     }
 
 
@@ -176,6 +178,7 @@ public class ClientController {
 
         Platform.runLater(() -> {
 
+
             if (client.getChatPartner() != null) {
                 if (client.getChatPartner().equals(sender)) {
                     guifx.addTextToChat(sender + ": ");
@@ -184,10 +187,7 @@ public class ClientController {
                     System.out.println("received msg from wrong person");
                 }
             } else {
-                if (sender.equals(" ")) {
-                } else {
-                    //client.getChatLogHandler().addToLogs(messagePDU);
-                }
+                guifx.setHasSentMessages(sender);
             }
         });
     }
@@ -225,10 +225,10 @@ public class ClientController {
                     updateChat(userlistPdu.usernames);
 
                     if (userlistPdu.usernames.size() > 1) {
+
                         updateFriendlist(userlistPdu.usernames);
                     } else {
                         Platform.runLater(() -> {
-                            guifx.clearFriendlist();
                             guifx.sendEmptyFriendlist();
                         });
                     }
@@ -271,46 +271,35 @@ public class ClientController {
     }
     private void updateFriendlist(ArrayList<String> userlist) {
 
-        boolean listHasChanged = false;
+        //client.getAllOldMessages(userlist);
 
         if (currentFriendlist == null) {
             currentFriendlist = new ArrayList<>(userlist);
-            listHasChanged = true;
         } else {
             if (currentFriendlist.equals(userlist)) {
                 //no update
                 return;
             }
         }
-        //client.updateChatLogs(userlist);
 
-        Platform.runLater(() -> guifx.clearFriendlist());
+        Platform.runLater(() -> {
+            guifx.clearFriendlist();
+            guifx.addFriendsToList(userlist, client.getUser().getFullName());
+        });
+
         for (String friend : userlist) {
             if (!friend.equals(client.getUser().getFullName())) {
 
-                int unreadMessages = client.getChatLogHandler().getUnreadMessages(friend);
-                System.out.println("Unread from " + friend + ": " + unreadMessages);
-                listHasChanged = true;
+                Platform.runLater(() -> {
 
-                if (listHasChanged) {
-                    Platform.runLater(() -> {
-
-                        boolean isCurrentChatPartner = false;
-
-                        if (client.getChatPartner() != null) {
-                            if (client.getChatPartner().equals(friend)) {
-                                isCurrentChatPartner = true;
-                            }
+                    guifx.findFriendWithUsername(friend).vbox.setOnMouseClicked(new EventHandler<MouseEvent>() {
+                        @Override
+                        public void handle(MouseEvent event) {
+                            startChatWith(friend);
                         }
-
-                        guifx.addToFriendList(friend, unreadMessages, isCurrentChatPartner).setOnMouseClicked(new EventHandler<MouseEvent>() {
-                            @Override
-                            public void handle(MouseEvent event) {
-                                startChatWith(friend);
-                            }
-                        });
                     });
-                }
+                });
+
             }
         }
     }

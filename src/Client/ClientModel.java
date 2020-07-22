@@ -23,7 +23,6 @@ public class ClientModel {
     private ClientMessageHandler cmh;
 
     public ClientModel() {
-        chatLogHandler = new ChatLogHandler();
     }
 
     public ChatLogHandler getChatLogHandler() {
@@ -59,6 +58,10 @@ public class ClientModel {
         for (PduHandler.PDU_MESSAGE oldPdu : oldMessages) {
             chatLogHandler.addToLog(oldPdu, username);
         }
+    }
+
+    public void getAllOldMessages(ArrayList<String> userlist) {
+        chatLogHandler.recreateLogsFromFile(userlist);
     }
 
     public void updateChatLogs(ArrayList<String> users) {
@@ -106,6 +109,7 @@ public class ClientModel {
     }
     private void createUser(String username) {
         user = new User(username, 0);
+        chatLogHandler = new ChatLogHandler(user);
     }
 
     public User getUser() {

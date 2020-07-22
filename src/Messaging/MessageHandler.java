@@ -1,7 +1,6 @@
 package Messaging;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.LinkedList;
@@ -14,16 +13,20 @@ public abstract class MessageHandler {
 
     private ScheduledExecutorService incomingThread;
     private ScheduledExecutorService outgoingThread;
-    protected Socket socket;
-    protected PrintWriter writer;
-    protected Queue<PDU> outgoingQueue;
-    protected Queue<PDU> incomingQueue;
+    private Socket socket;
+    private PrintWriter writer;
+    private Queue<PDU> outgoingQueue;
+    private Queue<PDU> incomingQueue;
 
     public MessageHandler(Socket socket) {
         this.socket = socket;
 
         outgoingQueue = new LinkedList<>();
         incomingQueue = new LinkedList<>();
+    }
+
+    public PrintWriter getWriter() {
+        return writer;
     }
 
     public synchronized void enqueuePDU(PDU pdu) {
@@ -34,7 +37,7 @@ public abstract class MessageHandler {
         return incomingQueue;
     }
 
-    public void startIO(int inputDelay, int outputDelay) {
+    protected void startIO(int inputDelay, int outputDelay) {
 
         try {
             writer = new PrintWriter(socket.getOutputStream());
@@ -64,7 +67,6 @@ public abstract class MessageHandler {
                     System.out.println("dead?");
                     return;
                 }
-                //System.out.println("Sending pdu: " + outgoingQueue.peek().toString());
                 SocketIO.sendPDU(writer, outgoingQueue.poll());
             }
         }
@@ -78,22 +80,19 @@ public abstract class MessageHandler {
     private Runnable inputThread = new Runnable() {
         @Override
         public void run() {
-            String input = null;
+            String input;
             try {
                 input = SocketIO.getInput(socket.getInputStream());
             } catch (IOException e) {
                 System.out.println("Socket error, closing Msghandler IO");
                 closeThreads();
-                //e.printStackTrace();
                 return;
             }
 
             if (input != null) {
                 PDU incomingPDU = PduHandler.getInstance().parse_pdu(input);
-                //System.out.println("Receiving pdu: " + incomingPDU.toString());
                 incomingQueue.add(incomingPDU);
             }
-
         }
     };
 }

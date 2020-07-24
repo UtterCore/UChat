@@ -1,13 +1,11 @@
 package GUI;
 
+import Messaging.ErrorMessage;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
@@ -32,8 +30,16 @@ public class GUIFX {
     private Button userSubmitButton;
     private Button chatSubmitButton;
     private TextField userTextField;
+    private PasswordField userPasswordField;
     private Text actiontarget;
+    private Hyperlink registerLink;
 
+    private TextField createUsernameField;
+    private TextField createEmailField;
+    private PasswordField createPasswordField;
+    private PasswordField createPasswordFieldRepeat;
+    private Button createUserSubmitButton;
+    private Button createBackButton;
 
     private TextField chatField;
     private TextArea chatArea;
@@ -75,6 +81,47 @@ public class GUIFX {
         return chatField;
     }
 
+    public PasswordField getUserPasswordField() {
+        return userPasswordField;
+    }
+
+    public Hyperlink getRegisterLink() {
+        return registerLink;
+    }
+
+    public Button getCreateUserSubmitButton() {
+        return createUserSubmitButton;
+    }
+
+    public Button getCreateBackButton() {
+        return createBackButton;
+    }
+
+    public TextField getCreateUsernameField() {
+        return createUsernameField;
+    }
+
+    public PasswordField getCreatePasswordField() {
+        return createPasswordField;
+    }
+
+    public PasswordField getCreatePasswordFieldRepeat() {
+        return createPasswordFieldRepeat;
+    }
+
+    public TextField getCreateEmailField() {
+        return createEmailField;
+    }
+
+    public void showRegisterError(ErrorMessage errorMessage) {
+        actiontarget.setFill(Color.FIREBRICK);
+        actiontarget.setText(errorMessage.getErrorMessage());
+    }
+
+    public void showSuccessMessage(ErrorMessage errorMessage) {
+        actiontarget.setFill(Color.SPRINGGREEN);
+        actiontarget.setText(errorMessage.getErrorMessage());
+    }
 
     public void showUsernameError(String errorMessage) {
         actiontarget.setFill(Color.FIREBRICK);
@@ -119,14 +166,14 @@ public class GUIFX {
         grid.setPadding(new Insets(25, 25, 25, 25));
 
         actiontarget = new Text();
-        grid.add(actiontarget, 1, 2);
+        grid.add(actiontarget, 1, 4);
 
         Text scenetitle = new Text("Welcome");
         scenetitle.setFill(Color.LIGHTBLUE);
         scenetitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
         grid.add(scenetitle, 0, 0, 2, 1);
 
-        Label userNameLabel = new Label("User name: ");
+        Label userNameLabel = new Label("Username: ");
         userNameLabel.setTextFill(Color.WHITE);
         grid.add(userNameLabel, 0, 1);
 
@@ -134,11 +181,92 @@ public class GUIFX {
         userTextField.getStyleClass().add("chat_textarea");
         grid.add(userTextField, 1, 1);
 
+        Label passwordLabel = new Label("Password: ");
+        passwordLabel.setTextFill(Color.WHITE);
+        grid.add(passwordLabel, 0, 2);
+
+        userPasswordField = new PasswordField();
+        userPasswordField.getStyleClass().add("chat_textarea");
+        grid.add(userPasswordField, 1, 2);
+
+        registerLink = new Hyperlink("Register");
+
         userSubmitButton = new Button("Sign in");
         HBox hbBtn = new HBox(10);
-        hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn.setAlignment(Pos.BOTTOM_CENTER);
+        hbBtn.getChildren().add(registerLink);
         hbBtn.getChildren().add(userSubmitButton);
         grid.add(hbBtn, 1, 3);
+
+
+
+        Scene scene = new Scene(grid, 300, 275);
+
+
+        scene.getStylesheets().add(getClass().getResource("chat.css").toExternalForm());
+
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    public void showRegister() {
+
+        Stage primaryStage = stage;
+
+        primaryStage.setTitle("UChat Register user");
+
+        GridPane grid = new GridPane();
+        grid.getStyleClass().add("friendlist_background");
+        grid.setAlignment(Pos.CENTER);
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(25, 25, 25, 25));
+
+        actiontarget = new Text();
+        grid.add(actiontarget, 1, 6);
+
+        Text scenetitle = new Text("Create user");
+        scenetitle.setFill(Color.LIGHTBLUE);
+        scenetitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
+        grid.add(scenetitle, 0, 0, 2, 1);
+
+        Label userNameLabel = new Label("Username: ");
+        userNameLabel.setTextFill(Color.WHITE);
+        grid.add(userNameLabel, 0, 1);
+        createUsernameField = new TextField();
+
+        Label emailLabel = new Label("Email: ");
+        emailLabel.setTextFill(Color.WHITE);
+        grid.add(emailLabel, 0, 2);
+        createEmailField = new TextField();
+
+        Label passwordLabel = new Label("Password: ");
+        passwordLabel.setTextFill(Color.WHITE);
+        grid.add(passwordLabel, 0, 3);
+        createPasswordField = new PasswordField();
+
+        Label passwordRepeatLabel = new Label("Repeat password: ");
+        passwordRepeatLabel.setTextFill(Color.WHITE);
+        grid.add(passwordRepeatLabel, 0, 4);
+        createPasswordFieldRepeat = new PasswordField();
+
+        createUsernameField.getStyleClass().add("chat_textarea");
+        createEmailField.getStyleClass().add("chat_textarea");
+        createPasswordField.getStyleClass().add("chat_textarea");
+        createPasswordFieldRepeat.getStyleClass().add("chat_textarea");
+
+        grid.add(createUsernameField, 1, 1);
+        grid.add(createEmailField, 1, 2);
+        grid.add(createPasswordField, 1, 3);
+        grid.add(createPasswordFieldRepeat, 1, 4);
+
+        createBackButton = new Button("Back");
+        createUserSubmitButton = new Button("Register");
+        HBox hbBtn = new HBox(10);
+        hbBtn.setAlignment(Pos.BOTTOM_CENTER);
+        hbBtn.getChildren().add(createBackButton);
+        hbBtn.getChildren().add(createUserSubmitButton);
+        grid.add(hbBtn, 1, 5);
 
 
         Scene scene = new Scene(grid, 300, 275);
@@ -152,12 +280,16 @@ public class GUIFX {
 
     public void lockLoginScreen() {
         userSubmitButton.setDisable(true);
+        userPasswordField.setDisable(true);
         userTextField.setDisable(true);
+        registerLink.setDisable(true);
     }
 
     public void unlockLoginScreen() {
         userSubmitButton.setDisable(false);
+        userPasswordField.setDisable(false);
         userTextField.setDisable(false);
+        registerLink.setDisable(false);
     }
     public TextArea getChatArea() {
         return chatArea;

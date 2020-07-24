@@ -82,8 +82,8 @@ public class ClientModel {
     }
 
 
-    public boolean connectToChatServer(String username, String address, int port) {
-        createUser(username);
+    public boolean connectToChatServer(String username, String password, String address, int port) {
+        createUser(username, null, password);
 
         try {
             sSocket = new Socket(InetAddress.getByName(address), port);
@@ -101,14 +101,34 @@ public class ClientModel {
         return true;
     }
 
+    public boolean connectToChatServer(String username, String password, String email, String address, int port) {
+        createUser(username, password, email);
+
+        try {
+            sSocket = new Socket(InetAddress.getByName(address), port);
+
+            cmh = new ClientMessageHandler(user, sSocket);
+            cmh.sendRegister();
+
+        } catch (IOException b) {
+            System.out.println("wrong something");
+            user = null;
+            cmh = null;
+            return false;
+        }
+
+        return true;
+    }
+
     public void killUser() {
         user = null;
     }
     public void login() {
         cmh.startUserListUpdater();
     }
-    private void createUser(String username) {
-        user = new User(username, "password");
+
+    private void createUser(String username, String email, String password) {
+        user = new User(username, email, password);
         chatLogHandler = new ChatLogHandler(user);
     }
 

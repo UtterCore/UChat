@@ -48,6 +48,11 @@ public class ClientMessageHandler extends MessageHandler {
         enqueuePDU(pdu);
     }
 
+    public void sendRegister() {
+        PDU pdu = PduHandler.getInstance().create_create_user_pdu(user.getUsername(), user.getEmail(), user.getPassword());
+        enqueuePDU(pdu);
+    }
+
     public void sendIsLeaving() {
         PDU pdu = PduHandler.getInstance().create_is_leaving_pdu();
         SocketIO.sendPDU(getWriter(), pdu);

@@ -84,13 +84,13 @@ public abstract class MessageHandler {
             try {
                 input = SocketIO.getInput(socket.getInputStream());
             } catch (IOException e) {
-                System.out.println("Socket error, closing Msghandler IO");
                 closeThreads();
                 return;
             }
 
             if (input != null) {
                 PDU incomingPDU = PduHandler.getInstance().parse_pdu(input);
+              ///  System.out.println("Incoming pdu: " + incomingPDU.toString());
                 incomingQueue.add(incomingPDU);
             }
         }

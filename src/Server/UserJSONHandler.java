@@ -25,6 +25,7 @@ public class UserJSONHandler {
             JSONObject json = new JSONObject();
 
                 json.put("username", user.getFullName());
+                json.put("email", user.getEmail());
                 json.put("password", user.getPassword());
                 json.put("id", user.getId());
 
@@ -81,8 +82,17 @@ public class UserJSONHandler {
         }
         return false;
     }
+
+    public static boolean fileExists(String filename) {
+        File file = new File(filename);
+        return file.exists();
+    }
+
     public static User getUserFromFile(String fullUsername) {
 
+        if (!fileExists("users/user.json")) {
+            return null;
+        }
         JSONParser parser = new JSONParser();
         Object o = null;
         try {
@@ -98,7 +108,7 @@ public class UserJSONHandler {
             JSONObject user = (JSONObject)ja.get(i);
             if (user.get("username").equals(fullUsername)) {
                 //return new User((String)user.get("username"), (String)user.get("password"), (int)user.get("id"));
-                return new User((String)user.get("username"), (String)user.get("password"));
+                return new User((String)user.get("username"), (String)user.get("email"), (String)user.get("password"));
             }
         }
 

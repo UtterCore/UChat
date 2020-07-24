@@ -150,17 +150,47 @@ public class ServerModel {
         }
 
         boolean checkCredentials(String username, String password) {
-
             return (UserJSONHandler.userExists(username, password));
         }
 
-        void handleCreateUser(String username, String password) {
+        ErrorMessage checkNewUserForm(User user) {
+            if (UserJSONHandler.getUserFromFile(user.getUsername()) != null) {
+                System.out.println("this user exists!");
+                return ErrorMessage.CR_USERNAME_ALREADY_EXISTS;
+            }
+            System.out.println("this user is ok!");
+            return ErrorMessage.INPUT_OK;
+        }
 
-            User newUser = new User(username, password);
+
+        void handleCreateUser(String username, String email, String password) {
+
+            User newUser = new User(username, email, password);
             newUser.setId(getFirstId(username));
-            userList.add(user);
+            int status = 0;
 
-            UserJSONHandler.saveUserToFile(user);
+            System.out.println("New user request: " + username + ", " + email + ", " + password);
+            ErrorMessage result = checkNewUserForm(newUser);
+
+            if (result == ErrorMessage.INPUT_OK) {
+                UserJSONHandler.saveUserToFile(newUser);
+                status = 1;
+            } else {
+
+            }
+
+            //user = newUser;
+            //userList.add(user);
+
+            PduHandler.PDU_CREATE_USER_RESPONSE responsePdu = PduHandler.getInstance().create_cr_user_response(status);
+
+
+            ///PduHandler.PDU_LOGIN_RESPONSE loginResponse = PduHandler.getInstance().create_login_response(1);
+            //smh.enqueuePDU(loginResponse);
+
+           // System.out.println("Response: " + responsePdu.toString());
+            smh.sendAndClose(responsePdu);
+            exit = true;
         }
 
         void handleLogin(String username, String password) {
@@ -220,6 +250,11 @@ public class ServerModel {
                     case PduHandler.LOGIN_REQUEST_PDU: {
                         PduHandler.PDU_LOGIN loginPDU = (PduHandler.PDU_LOGIN)incomingPDU;
                         handleLogin(loginPDU.username, loginPDU.password);
+                        break;
+                    }
+                    case PduHandler.CREATE_USER_REQUEST_PDU: {
+                        PduHandler.PDU_CREATE_USER createUserPDU = (PduHandler.PDU_CREATE_USER)incomingPDU;
+                        handleCreateUser(createUserPDU.username, createUserPDU.email, createUserPDU.password);
                         break;
                     }
                     default: {

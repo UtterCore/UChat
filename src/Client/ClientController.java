@@ -13,6 +13,7 @@ import javafx.event.EventHandler;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.WindowEvent;
 
+import javax.lang.model.type.ErrorType;
 import java.util.ArrayList;
 import java.util.Queue;
 import java.util.concurrent.Executors;
@@ -37,10 +38,14 @@ public class ClientController {
         client = new ClientModel();
         this.guifx = guifx;
 
-        outputThread = Executors.newScheduledThreadPool(1);
-        outputThread.scheduleAtFixedRate(getOutput, 0, 50, TimeUnit.MILLISECONDS);
+        startOutputThread();
 
         initLogin();
+    }
+
+    private void startOutputThread() {
+        outputThread = Executors.newScheduledThreadPool(1);
+        outputThread.scheduleAtFixedRate(getOutput, 0, 50, TimeUnit.MILLISECONDS);
     }
 
 
@@ -48,7 +53,21 @@ public class ClientController {
         guifx.showLogin();
 
         guifx.getUserTextField().setOnAction(submitLoginEventHandler());
+        guifx.getUserPasswordField().setOnAction(submitLoginEventHandler());
         guifx.getUserSubmitButton().setOnAction(submitLoginEventHandler());
+        guifx.getRegisterLink().setOnAction(registerLinkEventHandler());
+    }
+
+    private void initRegister() {
+
+        guifx.showRegister();
+        guifx.getCreateUsernameField().setOnAction(submitRegisterEventHandler());
+        guifx.getCreateEmailField().setOnAction(submitRegisterEventHandler());
+        guifx.getCreatePasswordField().setOnAction(submitRegisterEventHandler());
+        guifx.getCreatePasswordFieldRepeat().setOnAction(submitRegisterEventHandler());
+
+        guifx.getCreateUserSubmitButton().setOnAction(submitRegisterEventHandler());
+        guifx.getCreateBackButton().setOnAction(createUserBackEventHandler());
     }
 
     private void initChat(String username) {
@@ -97,6 +116,7 @@ public class ClientController {
         guifx.clearError();
 
         String enteredUsername = guifx.getUserTextField().getText();
+        String enteredPassword = guifx.getUserPasswordField().getText();
 
         ErrorMessage usernameStatus = InputHandler.checkUsername(enteredUsername);
         if (usernameStatus != ErrorMessage.INPUT_OK) {
@@ -108,12 +128,49 @@ public class ClientController {
 
         new Thread(() -> {
             guifx.lockLoginScreen();
-            if (connect(enteredUsername)) {
+            if (connect(enteredUsername, enteredPassword)) {
+            } else {
+                Platform.runLater(() -> guifx.showConnectionError());
+                guifx.unlockLoginScreen();
+                return;
+            }
+            guifx.unlockLoginScreen();
+        }).start();
+    }
+
+    private void handleRegisterSubmit() {
+        String enteredUsername = guifx.getCreateUsernameField().getText();
+        String enteredEmail = guifx.getCreateEmailField().getText();
+        String enteredPassword = guifx.getCreatePasswordField().getText();
+        String enteredPasswordRepeat = guifx.getCreatePasswordFieldRepeat().getText();
+
+        if (enteredUsername.length() == 0) {
+            guifx.showRegisterError(ErrorMessage.CR_USERNAME_EMPTY);
+            return;
+        }
+        if (enteredEmail.length() == 0) {
+            guifx.showRegisterError(ErrorMessage.CR_INVALID_MAIL);
+            return;
+        }
+            if (enteredPassword.length() == 0 || enteredPasswordRepeat.length() == 0) {
+            guifx.showRegisterError(ErrorMessage.CR_PASSWORD_INVALID);
+            return;
+        }
+        if (!enteredPassword.equals(enteredPasswordRepeat)) {
+            guifx.showRegisterError(ErrorMessage.CR_PASSWORD_DOES_NOT_MATCH);
+            return;
+        }
+
+        Platform.runLater(() -> guifx.showConnecting());
+
+        new Thread(() -> {
+            //guifx.lockLoginScreen();
+            if (connectNew(enteredUsername, enteredEmail, enteredPassword)) {
             } else {
                 Platform.runLater(() -> guifx.showConnectionError());
                 return;
             }
-            guifx.unlockLoginScreen();
+            //guifx.unlockLoginScreen();
         }).start();
 
     }
@@ -126,6 +183,24 @@ public class ClientController {
             return;
         }
         sendMessage(chatAreaContent, client.getChatPartner());
+    }
+
+    private EventHandler<javafx.event.ActionEvent> submitRegisterEventHandler() {
+        return new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                handleRegisterSubmit();
+            }
+        };
+    }
+
+    private EventHandler<javafx.event.ActionEvent> createUserBackEventHandler() {
+        return new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                initLogin();
+            }
+        };
     }
 
     private EventHandler<javafx.event.ActionEvent> submitLoginEventHandler() {
@@ -146,6 +221,16 @@ public class ClientController {
         };
     }
 
+    private EventHandler<javafx.event.ActionEvent> registerLinkEventHandler() {
+        return new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                initRegister();
+            }
+        };
+    }
+
+
     private EventHandler<WindowEvent> closeChatEventHandler() {
         return new EventHandler<WindowEvent>() {
             @Override
@@ -156,8 +241,12 @@ public class ClientController {
         };
     }
 
-    private boolean connect(String username) {
-        return (client.connectToChatServer(username, "localhost", PORT));
+    private boolean connect(String username, String password) {
+        return (client.connectToChatServer(username, password, "localhost", PORT));
+    }
+
+    private boolean connectNew(String username, String email, String password) {
+        return (client.connectToChatServer(username, email, password, "localhost", PORT));
     }
 
     private void sendMessage(String message, String target) {
@@ -242,10 +331,40 @@ public class ClientController {
                 PduHandler.PDU_LOGIN_RESPONSE responsePDU = (PduHandler.PDU_LOGIN_RESPONSE)pdu;
 
                 if (responsePDU.status == GUIFX.LOGIN_SUCCESS) {
+                    System.out.println("login success!");
                     initFriends();
                     client.login();
                 } else {
                     guifx.showLoginError(GUIFX.WRONG_CREDENTIALS);
+                    client.killUser();
+                    client.shutDownConnection();
+
+                    client = new ClientModel();
+                }
+                break;
+            }
+            case PduHandler.CREATE_USER_RESPONSE_PDU: {
+                PduHandler.PDU_CREATE_USER_RESPONSE responsePDU = (PduHandler.PDU_CREATE_USER_RESPONSE)pdu;
+
+                if (responsePDU.status == GUIFX.LOGIN_SUCCESS) {
+                    System.out.println("Create success!!!");
+
+
+                    client.killUser();
+                    client.shutDownConnection();
+
+                    client = new ClientModel();
+
+                    startOutputThread();
+
+                    Platform.runLater(() -> {
+
+                        initLogin();
+                        guifx.showSuccessMessage(ErrorMessage.CR_SUCCESS);
+                    });
+                } else {
+                    System.out.println("Already exists!");
+                    Platform.runLater(() -> guifx.showRegisterError(ErrorMessage.CR_USERNAME_ALREADY_EXISTS));
                     client.killUser();
                     client.shutDownConnection();
 

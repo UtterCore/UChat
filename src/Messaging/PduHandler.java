@@ -14,6 +14,7 @@ public class PduHandler {
     public static final int LOGIN_REQUEST_PDU = 8;
     public static final int CREATE_USER_REQUEST_PDU = 9;
     public static final int LOGIN_RESPONSE_PDU = 10;
+    public static final int CREATE_USER_RESPONSE_PDU = 11;
 
     private static PduHandler pduHandler = new PduHandler();
 
@@ -59,12 +60,17 @@ public class PduHandler {
         return new PDU_LOGIN(username, password);
     }
 
-    public PDU_CREATE_USER create_create_user_pdu(String email, String username, String password) {
-        return new PDU_CREATE_USER(email, username, password);
+    public PDU_CREATE_USER create_create_user_pdu(String username, String email, String password) {
+        return new PDU_CREATE_USER(username, email, password);
     }
 
     public PDU_LOGIN_RESPONSE create_login_response(int status) {
         return new PDU_LOGIN_RESPONSE(status);
+    }
+
+    public PDU_CREATE_USER_RESPONSE create_cr_user_response(int status) {
+        System.out.println("creating user response: " + status);
+        return new PDU_CREATE_USER_RESPONSE(status);
     }
 
 
@@ -121,6 +127,9 @@ public class PduHandler {
                 }
                 case LOGIN_RESPONSE_PDU: {
                     return create_login_response(Integer.parseInt(parts[1]));
+                }
+                case CREATE_USER_RESPONSE_PDU: {
+                    return create_cr_user_response(Integer.parseInt(parts[1]));
                 }
                 default: {
                     System.out.println("Invalid pdu type??");
@@ -268,20 +277,20 @@ public class PduHandler {
     }
 
     public class PDU_CREATE_USER extends PDU {
-        public String email;
         public String username;
+        public String email;
         public String password;
 
-        private PDU_CREATE_USER(String email, String username, String password) {
+        private PDU_CREATE_USER(String username, String email, String password) {
             type = CREATE_USER_REQUEST_PDU;
-            this.email = email;
             this.username = username;
+            this.email = email;
             this.password = password;
         }
 
         @Override
         public String toString() {
-            return type + ";" + email + ";" + username + ";" + password;
+            return type + ";" + username + ";" + email + ";" + password;
         }
     }
 
@@ -290,6 +299,20 @@ public class PduHandler {
 
         private PDU_LOGIN_RESPONSE(int status) {
             type = LOGIN_RESPONSE_PDU;
+            this.status = status;
+        }
+
+        @Override
+        public String toString() {
+            return type + ";" + status;
+        }
+    }
+
+    public class PDU_CREATE_USER_RESPONSE extends PDU {
+        public int status;
+
+        private PDU_CREATE_USER_RESPONSE(int status) {
+            type = CREATE_USER_RESPONSE_PDU;
             this.status = status;
         }
 

@@ -78,7 +78,7 @@ public class PduHandler {
 
         String parts[] = input.split(";");
         if (parts.length == 0 || parts.length == 1) {
-            System.out.println("Invalid pdu");
+            System.out.println("Received unparseable pdu: " + input);
             return null;
         } else {
 

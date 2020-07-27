@@ -2,6 +2,8 @@ package Server;
 
 import java.io.IOException;
 import java.util.Scanner;
+import java.util.*;
+import User.*;
 
 
 public class ServerController {
@@ -30,7 +32,9 @@ public class ServerController {
         public void run() {
             while (in.hasNextLine()) {
 
-                switch (in.nextLine()) {
+                String adminInput = in.nextLine();
+
+                switch (adminInput) {
                     case "/close": {
                         System.out.println("Closing server");
                         break;
@@ -53,6 +57,22 @@ public class ServerController {
                         }
                         System.out.print("\n");
                         break;
+                    }
+                }
+
+                String parts[] = adminInput.split(" ");
+                if (parts.length == 2) {
+                    switch (parts[0]) {
+                        case "/info": {
+                            User user = server.findUserByName(parts[1]);
+                            if (user != null) {
+                                System.out.println("User info of " + user.getFullName());
+                                System.out.println(user.getInfoString());
+                            } else {
+                                System.out.println("User " + parts[1] + " is not online");
+                            }
+                            break;
+                        }
                     }
                 }
             }

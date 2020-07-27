@@ -45,6 +45,13 @@ public class User {
         }
     }
 
+    public String getInfoString() {
+        String infoString = "";
+        infoString += "Username: " + getFullName() + "\n";
+        infoString += "Password: " + getPassword() + "\n";
+        infoString += "Email: " + getEmail();
+        return infoString;
+    }
     public int getId() {
         return id;
     }

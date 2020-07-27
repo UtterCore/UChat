@@ -45,6 +45,9 @@ public class ClientModel {
     }
 
     public void quit() {
+        if (sSocket == null) {
+            return;
+        }
         try {
             sSocket.close();
         } catch (IOException e) {
@@ -147,7 +150,9 @@ public class ClientModel {
     */
 
     public void sendIsLeaving() {
-        cmh.sendIsLeaving();
-        cmh = null;
+        if (cmh != null) {
+            cmh.sendIsLeaving();
+            cmh = null;
+        }
     }
 }

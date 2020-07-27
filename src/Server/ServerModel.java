@@ -40,7 +40,7 @@ public class ServerModel {
         return null;
     }
 
-    private User findUserByName(String username) {
+    public User findUserByName(String username) {
         for (User user : userList) {
             if (user.getFullName().equals(username)) {
                 return user;

@@ -15,6 +15,7 @@ import javafx.stage.WindowEvent;
 import org.xml.sax.ErrorHandler;
 
 import javax.lang.model.type.ErrorType;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Queue;
 import java.util.concurrent.Executors;
@@ -38,13 +39,8 @@ public class ClientController {
         client = new ClientModel();
         this.guifx = guifx;
 
-
-        //sendFile("./resources/hund.j25pg", null);
-
         startOutputThread();
-
         initLogin();
-
     }
 
     private void startOutputThread() {
@@ -79,6 +75,12 @@ public class ClientController {
         guifx.setChatCloseEvent(closeChatEventHandler());
 
         guifx.getChatField().setOnAction(submitChatEventHandler());
+        guifx.getChatSendImageButton().setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                //sendFile("./resources/hund.jpg", client.getChatPartner());
+            }
+        });
         guifx.getChatSubmitButton().setOnAction(submitChatEventHandler());
         client.getOldMessages(username);
 
@@ -400,8 +402,25 @@ public class ClientController {
                 }
                 break;
             }
+            case PduHandler.IMAGE_MESSAGE_PDU: {
+
+                PduHandler.PDU_IMAGE_MESSAGE imgPDU = (PduHandler.PDU_IMAGE_MESSAGE)pdu;
+                System.out.println("Received image!");
+
+                /*
+                try {
+
+                    client.createNewImage(imgPDU.imageData);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                */
+                break;
+            }
         }
     }
+
+
 
     private ErrorMessage getCorrectErrorMessage(int id) {
         for (ErrorMessage errorMessage : ErrorMessage.values()) {

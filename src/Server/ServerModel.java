@@ -260,6 +260,17 @@ public class ServerModel {
                         handleCreateUser(createUserPDU.username, createUserPDU.email, createUserPDU.password);
                         break;
                     }
+                    case PduHandler.IMAGE_MESSAGE_PDU: {
+                        PduHandler.PDU_IMAGE_MESSAGE messagePDU = (PduHandler.PDU_IMAGE_MESSAGE)incomingPDU;
+
+                        if (findThreadByName(messagePDU.target) != null) {
+                            findThreadByName(messagePDU.target).getSmh().enqueuePDU(messagePDU);
+                        } else {
+                            System.out.println("ERROR: No user with name: " +
+                                    messagePDU.target + " in thread list");
+                        }
+                        break;
+                    }
                     default: {
                         System.out.println("Received unknown pdu: " + incomingPDU.toString());
                         break;

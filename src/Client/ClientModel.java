@@ -9,6 +9,8 @@ import User.User;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
@@ -171,25 +173,29 @@ public class ClientModel {
     public void sendFile(String filename, String target) {
         BufferedImage image = null;
 
-
         try {
 
             image = ImageIO.read(new File(filename));
 
-            //ImageIO.write(image, "jpg", new File("./nyhund.jpg"));
-            cmh.prepareAndSend(image.toString(), target);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(image, "jpg", baos);
 
+            byte[] bytes = baos.toByteArray();
+
+            //ImageIO.write(image, "jpg", new File("./nyhund.jpg"));
+            cmh.prepareAndSend(bytes, target);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    /*
-    public void setTarget(String username) {
-        cmh.sendSetTarget(username);
+    public void createNewImage(byte[] data) throws IOException {
+        ByteArrayInputStream bis = new ByteArrayInputStream(data);
+        BufferedImage bImage2 = ImageIO.read(bis);
+        ImageIO.write(bImage2, "jpg", new File("output.jpg") );
+        System.out.println("image created");
     }
-    */
 
     public void sendIsLeaving() {
         if (cmh != null) {

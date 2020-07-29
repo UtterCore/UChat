@@ -43,6 +43,15 @@ public class ClientMessageHandler extends MessageHandler {
         enqueuePDU(message_pdu);
     }
 
+    public void prepareAndSend(byte[] input, String target) {
+        PDU message_pdu;
+
+        message_pdu = PduHandler.getInstance().create_img_msg_pdu(input, user.getFullName(), target, false);
+
+        FileHandler.savePDUToFile(message_pdu, user.getFullName());
+        enqueuePDU(message_pdu);
+    }
+
     public void sendUserInfo() {
         PDU pdu = PduHandler.getInstance().create_login_pdu(user.getUsername(), user.getPassword());
         enqueuePDU(pdu);

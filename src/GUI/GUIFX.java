@@ -29,6 +29,7 @@ public class GUIFX {
 
     private Button userSubmitButton;
     private Button chatSubmitButton;
+    private Button chatSendImageButton;
     private TextField userTextField;
     private PasswordField userPasswordField;
     private Text actiontarget;
@@ -71,6 +72,10 @@ public class GUIFX {
 
     public Button getChatSubmitButton() {
         return chatSubmitButton;
+    }
+
+    public Button getChatSendImageButton() {
+        return chatSendImageButton;
     }
 
     public TextField getUserTextField() {
@@ -345,9 +350,11 @@ public class GUIFX {
 
         grid.add(chatField, 1, 2);
 
+        chatSendImageButton = new Button("IMG");
         chatSubmitButton = new Button("Send");
         HBox hbBtn = new HBox(10);
         hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn.getChildren().add(chatSendImageButton);
         hbBtn.getChildren().add(chatSubmitButton);
         grid.add(hbBtn, 1, 3);
 
@@ -394,7 +401,6 @@ public class GUIFX {
 
     public void sendEmptyFriendlist() {
 
-        System.out.println("Sending empty!");
         friendsBox.getChildren().clear();
         friends = new ArrayList<>();
         emptyFriendsText.setVisible(true);

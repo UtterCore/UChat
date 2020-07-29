@@ -1,5 +1,7 @@
 package Messaging;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+
 import java.util.ArrayList;
 
 public class PduHandler {
@@ -74,8 +76,8 @@ public class PduHandler {
         return new PDU_CREATE_USER_RESPONSE(status);
     }
 
-    public PDU_MESSAGE create_img_msg_pdu(String imageData, String sender, String target, boolean isRead) {
-        return new PDU_MESSAGE(imageData, sender, target, isRead);
+    public PDU_IMAGE_MESSAGE create_img_msg_pdu(byte[] imageData, String sender, String target, boolean isRead) {
+        return new PDU_IMAGE_MESSAGE(imageData, sender, target, isRead);
     }
 
 
@@ -135,6 +137,9 @@ public class PduHandler {
                 }
                 case CREATE_USER_RESPONSE_PDU: {
                     return create_cr_user_response(Integer.parseInt(parts[1]));
+                }
+                case IMAGE_MESSAGE_PDU: {
+                    return create_img_msg_pdu(parts[4].getBytes(), parts[1], parts[2], Boolean.parseBoolean(parts[3]));
                 }
                 default: {
                     System.out.println("Invalid pdu type??");
@@ -329,13 +334,13 @@ public class PduHandler {
 
     public class PDU_IMAGE_MESSAGE extends PDU {
 
-        public String imageData;
+        public byte[] imageData;
         public String sender;
         public String target;
         public boolean isRead;
 
-        private PDU_IMAGE_MESSAGE(String imageData, String sender, String target, boolean isRead) {
-            type = MESSAGE_PDU;
+        private PDU_IMAGE_MESSAGE(byte[] imageData, String sender, String target, boolean isRead) {
+            type = IMAGE_MESSAGE_PDU;
             if (sender == null) {
                 sender = " ";
             }

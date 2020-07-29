@@ -4,6 +4,8 @@ import javafx.stage.Stage;
 import Client.*;
 
         /*
+        TODO: IMG: Change all (or some) PDUs to JSON to be able to send files (yikes)
+
         TODO: Timeout for server threads (if a user crashes etc)
         TODO: Unread message indicator
         TODO: Sanitize input from ";" (login, chat etc)

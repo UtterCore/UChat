@@ -12,6 +12,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.WindowEvent;
+import org.xml.sax.ErrorHandler;
 
 import javax.lang.model.type.ErrorType;
 import java.util.ArrayList;
@@ -32,15 +33,18 @@ public class ClientController {
     private int currentState;
     private GUIFX guifx;
 
-    private ArrayList<String> currentFriendlist;
 
     public ClientController(GUIFX guifx) {
         client = new ClientModel();
         this.guifx = guifx;
 
+
+        //sendFile("./resources/hund.j25pg", null);
+
         startOutputThread();
 
         initLogin();
+
     }
 
     private void startOutputThread() {
@@ -257,6 +261,9 @@ public class ClientController {
         guifx.clearTextField();
     }
 
+    private void sendFile(String filename, String target) {
+        client.sendFile(filename, target);
+    }
     private void handleMessage(PduHandler.PDU_MESSAGE messagePDU) {
 
         String message = messagePDU.message;
@@ -315,11 +322,32 @@ public class ClientController {
 
                     if (userlistPdu.usernames.size() > 1) {
 
-                        updateFriendlist(userlistPdu.usernames);
+                        if (client.updateFriendList(userlistPdu.usernames)) {
+                            Platform.runLater(() -> {
+                                guifx.clearFriendlist();
+                                guifx.addFriendsToList(userlistPdu.usernames, client.getUser().getFullName());
+                            });
+
+                            for (String friend : client.getCurrentUserlist()) {
+                                if (!friend.equals(client.getUser().getFullName())) {
+
+                                    Platform.runLater(() -> {
+
+                                        guifx.findFriendWithUsername(friend).vbox.setOnMouseClicked(new EventHandler<MouseEvent>() {
+                                            @Override
+                                            public void handle(MouseEvent event) {
+                                                startChatWith(friend);
+                                            }
+                                        });
+                                    });
+
+                                }
+                            }
+
+                        }
                     } else {
-                        Platform.runLater(() -> {
-                            guifx.sendEmptyFriendlist();
-                        });
+                        client.resetFriendlist();
+                        Platform.runLater(() -> guifx.sendEmptyFriendlist());
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -330,12 +358,12 @@ public class ClientController {
             case PduHandler.LOGIN_RESPONSE_PDU: {
                 PduHandler.PDU_LOGIN_RESPONSE responsePDU = (PduHandler.PDU_LOGIN_RESPONSE)pdu;
 
-                if (responsePDU.status == GUIFX.LOGIN_SUCCESS) {
+                if (responsePDU.status == ErrorMessage.INPUT_OK.getMessageId()) {
                     System.out.println("login success!");
                     initFriends();
                     client.login();
                 } else {
-                    guifx.showLoginError(GUIFX.WRONG_CREDENTIALS);
+                    guifx.showLoginError(getCorrectErrorMessage(responsePDU.status));
                     client.killUser();
                     client.shutDownConnection();
 
@@ -375,6 +403,14 @@ public class ClientController {
         }
     }
 
+    private ErrorMessage getCorrectErrorMessage(int id) {
+        for (ErrorMessage errorMessage : ErrorMessage.values()) {
+            if (errorMessage.getMessageId() == id) {
+                return errorMessage;
+            }
+        }
+        return null;
+    }
     private void updateChat(ArrayList<String> userlist) {
         Platform.runLater(() -> {
             if (!userlist.contains(client.getChatPartner())) {
@@ -385,40 +421,8 @@ public class ClientController {
                 }
             }
         });
-    }
-    private void updateFriendlist(ArrayList<String> userlist) {
 
-        //client.getAllOldMessages(userlist);
 
-        if (currentFriendlist == null) {
-            currentFriendlist = new ArrayList<>(userlist);
-        } else {
-            if (currentFriendlist.equals(userlist)) {
-                //no update
-                return;
-            }
-        }
-
-        Platform.runLater(() -> {
-            guifx.clearFriendlist();
-            guifx.addFriendsToList(userlist, client.getUser().getFullName());
-        });
-
-        for (String friend : userlist) {
-            if (!friend.equals(client.getUser().getFullName())) {
-
-                Platform.runLater(() -> {
-
-                    guifx.findFriendWithUsername(friend).vbox.setOnMouseClicked(new EventHandler<MouseEvent>() {
-                        @Override
-                        public void handle(MouseEvent event) {
-                            startChatWith(friend);
-                        }
-                    });
-                });
-
-            }
-        }
     }
 
     public void quit() {

@@ -133,14 +133,9 @@ public class GUIFX {
         actiontarget.setText("Could not connect to chat server");
     }
 
-    public void showLoginError(int errorType) {
-        switch (errorType) {
-            case WRONG_CREDENTIALS: {
-                actiontarget.setFill(Color.FIREBRICK);
-                actiontarget.setText("Wrong username or password");
-                break;
-            }
-        }
+    public void showLoginError(ErrorMessage errorMessage) {
+        actiontarget.setFill(Color.FIREBRICK);
+        actiontarget.setText(errorMessage.getErrorMessage());
     }
 
     public void clearError() {
@@ -399,6 +394,8 @@ public class GUIFX {
 
     public void sendEmptyFriendlist() {
 
+        System.out.println("Sending empty!");
+        friendsBox.getChildren().clear();
         friends = new ArrayList<>();
         emptyFriendsText.setVisible(true);
         //Text emptyText = new Text("No friends online :(");

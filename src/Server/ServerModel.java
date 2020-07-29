@@ -149,8 +149,16 @@ public class ServerModel {
             smh.enqueuePDU(userlistPDU);
         }
 
-        boolean checkCredentials(String username, String password) {
-            return (UserJSONHandler.userExists(username, password));
+        ErrorMessage checkCredentials(String username, String password) {
+
+            if (!UserJSONHandler.userExists(username, password)) {
+                return ErrorMessage.WRONG_CREDENTIALS;
+            }
+            if (findUserByName(username) != null) {
+                return ErrorMessage.CR_ALREADY_LOGGED_IN;
+            }
+
+            return (ErrorMessage.INPUT_OK);
         }
 
         ErrorMessage checkNewUserForm(User user) {
@@ -195,16 +203,11 @@ public class ServerModel {
 
         void handleLogin(String username, String password) {
 
-            int status = 0;
-            boolean loginAccepted = checkCredentials(username, password);
+            ErrorMessage loginStatus = checkCredentials(username, password);
 
-            if (loginAccepted) {
-                status = 1;
-            }
+            PduHandler.PDU_LOGIN_RESPONSE loginResponse = PduHandler.getInstance().create_login_response(loginStatus.getMessageId());
 
-            PduHandler.PDU_LOGIN_RESPONSE loginResponse = PduHandler.getInstance().create_login_response(status);
-
-            if (loginAccepted) {
+            if (loginStatus == ErrorMessage.INPUT_OK) {
                 smh.enqueuePDU(loginResponse);
                 user = UserJSONHandler.getUserFromFile(username);
                 userList.add(user);

@@ -7,6 +7,9 @@ import Messaging.PDU;
 import Messaging.PduHandler;
 import User.User;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetAddress;
@@ -21,6 +24,7 @@ public class ClientModel {
     private String chatPartner;
     private ChatLogHandler chatLogHandler;
     private ClientMessageHandler cmh;
+    private ArrayList<String> currentUserlist;
 
     public ClientModel() {
     }
@@ -34,6 +38,10 @@ public class ClientModel {
             return cmh.getIncomingPDUQueue();
         }
         return null;
+    }
+
+    public ArrayList<String> getCurrentUserlist() {
+        return currentUserlist;
     }
 
     public String getChatPartner() {
@@ -53,6 +61,23 @@ public class ClientModel {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void resetFriendlist() {
+        currentUserlist = null;
+    }
+    public boolean updateFriendList(ArrayList<String> userlist) {
+        if (currentUserlist == null) {
+            currentUserlist = new ArrayList<>(userlist);
+            return true;
+        } else {
+            if (currentUserlist.equals(userlist)) {
+                //no update
+                return false;
+            }
+        }
+        currentUserlist = new ArrayList<>(userlist);
+        return true;
     }
 
     public void getOldMessages(String username) {
@@ -141,6 +166,23 @@ public class ClientModel {
 
     public void sendMessage(String message, String target) {
         cmh.prepareAndSend(message, target);
+    }
+
+    public void sendFile(String filename, String target) {
+        BufferedImage image = null;
+
+
+        try {
+
+            image = ImageIO.read(new File(filename));
+
+            //ImageIO.write(image, "jpg", new File("./nyhund.jpg"));
+            cmh.prepareAndSend(image.toString(), target);
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /*

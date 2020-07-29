@@ -64,7 +64,6 @@ public abstract class MessageHandler {
 
             if (!outgoingQueue.isEmpty()) {
                 if (writer == null) {
-                    System.out.println("dead?");
                     return;
                 }
                 SocketIO.sendPDU(writer, outgoingQueue.poll());

@@ -15,6 +15,7 @@ public class PduHandler {
     public static final int CREATE_USER_REQUEST_PDU = 9;
     public static final int LOGIN_RESPONSE_PDU = 10;
     public static final int CREATE_USER_RESPONSE_PDU = 11;
+    public static final int IMAGE_MESSAGE_PDU = 12;
 
     private static PduHandler pduHandler = new PduHandler();
 
@@ -71,6 +72,10 @@ public class PduHandler {
     public PDU_CREATE_USER_RESPONSE create_cr_user_response(int status) {
         System.out.println("creating user response: " + status);
         return new PDU_CREATE_USER_RESPONSE(status);
+    }
+
+    public PDU_MESSAGE create_img_msg_pdu(String imageData, String sender, String target, boolean isRead) {
+        return new PDU_MESSAGE(imageData, sender, target, isRead);
     }
 
 
@@ -319,6 +324,30 @@ public class PduHandler {
         @Override
         public String toString() {
             return type + ";" + status;
+        }
+    }
+
+    public class PDU_IMAGE_MESSAGE extends PDU {
+
+        public String imageData;
+        public String sender;
+        public String target;
+        public boolean isRead;
+
+        private PDU_IMAGE_MESSAGE(String imageData, String sender, String target, boolean isRead) {
+            type = MESSAGE_PDU;
+            if (sender == null) {
+                sender = " ";
+            }
+            this.imageData = imageData;
+            this.sender = sender;
+            this.target = target;
+            this.isRead = isRead;
+        }
+
+        @Override
+        public String toString() {
+            return type + ";" + sender + ";" + target + ";" + String.valueOf(isRead) + ";" + imageData;
         }
     }
 }

@@ -33,7 +33,7 @@ public class ClientController {
     private ScheduledExecutorService outputThread;
     private int currentState;
     private GUIFX guifx;
-
+    private boolean useFileHandler = true;
 
     public ClientController(GUIFX guifx) {
         client = new ClientModel();
@@ -82,8 +82,10 @@ public class ClientController {
             }
         });
         guifx.getChatSubmitButton().setOnAction(submitChatEventHandler());
-        client.getOldMessages(username);
 
+        if (useFileHandler) {
+            client.loadMessages(username);
+        }
         Platform.runLater(() -> guifx.resetName(username));
     }
 
@@ -264,15 +266,16 @@ public class ClientController {
     }
 
     private void sendFile(String filename, String target) {
-        client.sendFile(filename, target);
+       // client.sendFile(filename, target);
     }
     private void handleMessage(PduHandler.PDU_MESSAGE messagePDU) {
 
         String message = messagePDU.message;
         String sender = messagePDU.sender;
 
-        FileHandler.savePDUToFile(messagePDU, client.getUser().getFullName());
-
+        if (useFileHandler) {
+            client.saveMessage(messagePDU);
+        }
 
         Platform.runLater(() -> {
 
@@ -358,10 +361,11 @@ public class ClientController {
             }
 
             case PduHandler.LOGIN_RESPONSE_PDU: {
+               // System.out.println("login response");
                 PduHandler.PDU_LOGIN_RESPONSE responsePDU = (PduHandler.PDU_LOGIN_RESPONSE)pdu;
 
                 if (responsePDU.status == ErrorMessage.INPUT_OK.getMessageId()) {
-                    System.out.println("login success!");
+                   // System.out.println("login success!");
                     initFriends();
                     client.login();
                 } else {
@@ -461,6 +465,7 @@ public class ClientController {
 
             if (client.getIncomingMessageQueue() != null) {
                 if (!client.getIncomingMessageQueue().isEmpty()) {
+                    //System.out.println(client.getIncomingMessageQueue().peek().toJSON());
                     handlePDU(client.getIncomingMessageQueue().poll());
                 }
             }

@@ -1,7 +1,10 @@
 import GUI.GUIFX;
+import Server.Webserver.Webserver;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import Client.*;
+
+import java.io.IOException;
 
         /*
         TODO: IMG: Change all (or some) PDUs to JSON to be able to send files (yikes)

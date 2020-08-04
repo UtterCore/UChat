@@ -58,4 +58,31 @@ public class Response {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    @Override
+    public String toString() {
+        String responseString = "";
+        responseString +=
+                "HTTP/1.0 " + getStatus() + "\r\n " +
+                        "Content-Length: " + getLength() + "\n" +
+                        "Content-Type: " + getFileType() + "\r\n\r\n\r\n";
+
+
+        responseString += header + getBody() + "\n";
+
+        return responseString;
+    }
+
+    public String toHTTP() {
+        String responseString = "";
+        responseString +=
+                "HTTP/1.0 " + getStatus() + "\r\n " +
+                        "Content-Length: " + getLength() + "\n" +
+                        "Content-Type: " + getFileType() + "\r\n\r\n\r\n";
+
+
+        responseString += header + getBody() + "\n";
+
+        return responseString;
+    }
 }

@@ -82,12 +82,16 @@ public class ClientModel {
         return true;
     }
 
-    public void getOldMessages(String username) {
+    public void loadMessages(String username) {
         ArrayList<PduHandler.PDU_MESSAGE> oldMessages = FileHandler.getMessages(user.getFullName(), username);
 
         for (PduHandler.PDU_MESSAGE oldPdu : oldMessages) {
             chatLogHandler.addToLog(oldPdu, username);
         }
+    }
+
+    public void saveMessage(PDU message) {
+        FileHandler.savePDUToFile(message, getUser().getFullName());
     }
 
     public void getAllOldMessages(ArrayList<String> userlist) {
@@ -96,7 +100,7 @@ public class ClientModel {
 
     public void updateChatLogs(ArrayList<String> users) {
         for (String user : users) {
-            getOldMessages(user);
+            loadMessages(user);
         }
     }
 

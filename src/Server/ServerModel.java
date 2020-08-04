@@ -1,6 +1,8 @@
 package Server;
 
 import Messaging.*;
+import Server.Webserver.Response;
+import Server.Webserver.Webs;
 import User.User;
 import javafx.application.Platform;
 
@@ -139,6 +141,16 @@ public class ServerModel {
 
         private void sendUserListPDU() {
 
+            /*
+            Response response = new Response();
+            response.setStatus("200 OK");
+            response.setFileType("text/html");
+            response.setBody("<html><head></head><body><h1>Hej!</h1></body></html>");
+            response.setLength(response.getBody().length());
+            smh.sendRawData(response.toHTTP());
+
+            System.out.println("Sending: " + response.toHTTP());
+            */
             ArrayList<String> userlistString = new ArrayList<>();
             for (User user : userList) {
                 userlistString.add(user.getFullName());
@@ -147,6 +159,7 @@ public class ServerModel {
             PDU userlistPDU = PduHandler.getInstance().create_userlist_pdu(userlistString);
 
             smh.enqueuePDU(userlistPDU);
+
         }
 
         ErrorMessage checkCredentials(String username, String password) {
@@ -227,6 +240,9 @@ public class ServerModel {
 
         void handleInput(PDU incomingPDU) throws IllegalArgumentException {
 
+            if (incomingPDU == null) {
+                return;
+            }
                 switch (incomingPDU.type) {
 
                     case PduHandler.MESSAGE_PDU: {

@@ -71,6 +71,9 @@ public abstract class MessageHandler {
         }
     };
 
+    public void sendRawData(String data) {
+        SocketIO.sendData(writer, data);
+    }
     public void sendAndClose(PDU pdu) {
         SocketIO.sendPDU(writer, pdu);
         closeThreads();

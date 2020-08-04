@@ -1,8 +1,13 @@
 package Messaging;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
+import Server.Webserver.Webs;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class PduHandler {
 
@@ -80,9 +85,133 @@ public class PduHandler {
         return new PDU_IMAGE_MESSAGE(imageData, sender, target, isRead);
     }
 
+    private PDU parse_json(String input) {
+
+        JSONParser parser = new JSONParser();
+
+        Object o;
+        try {
+            o = parser.parse(input);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+        JSONObject incomingJSON = (JSONObject)o;
+
+        if (incomingJSON.get("type") == null) {
+            System.out.println("Received unparseable pdu: " + input);
+            return null;
+        } else {
+
+            int type = Integer.parseInt("" + incomingJSON.get("type"));
+            switch (type) {
+                case MESSAGE_PDU: {
+
+                    return create_msg_pdu((String)incomingJSON.get("message"), (String)incomingJSON.get("sender"), (String)incomingJSON.get("target"), false);
+                }
+                case COMMAND_PDU: {
+                    // System.out.println("Command pdu found");
+                    return create_cmd_pdu((String)incomingJSON.get("command"), (String)incomingJSON.get("sender"));
+                }
+                case CHATINFO_PDU: {
+
+                    //   System.out.println("ChatInfo pdu found");
+                    return create_chatinfo_pdu((String)incomingJSON.get("chatPartner"));
+                }
+
+                case USERLIST_PDU: {
+                    ArrayList<String> userlist = new ArrayList<>();
+
+                    JSONArray userArray = (JSONArray)incomingJSON.get("userlist");
+                    ArrayList<String> al = new ArrayList(userArray);
+                    for (String username : al) {
+                        userlist.add(username);
+                    }
+
+                    return create_userlist_pdu(userlist);
+                }
+
+                case USERLIST_REQUEST_PDU: {
+
+                    return create_userlist_requeust_pdu((String)incomingJSON.get("sender"));
+                }
+
+                case SET_TARGET_PDU: {
+
+                    return create_set_target_pdu((String)incomingJSON.get("target"));
+                }
+                case IS_LEAVING_PDU: {
+                    return create_is_leaving_pdu();
+                }
+                case LOGIN_REQUEST_PDU: {
+                    return create_login_pdu((String)incomingJSON.get("username"), (String)incomingJSON.get("password"));
+                }
+                case CREATE_USER_REQUEST_PDU: {
+                    return create_create_user_pdu((String)incomingJSON.get("username"), (String)incomingJSON.get("password"), (String)incomingJSON.get("email"));
+                }
+                case LOGIN_RESPONSE_PDU: {
+                    return create_login_response(Integer.parseInt("" + incomingJSON.get("status")));
+                }
+                case CREATE_USER_RESPONSE_PDU: {
+                    return create_cr_user_response((int)incomingJSON.get("status"));
+                }
+                case IMAGE_MESSAGE_PDU: {
+                    return create_img_msg_pdu(((String)incomingJSON.get("imageData")).getBytes(), (String)incomingJSON.get("sender"), (String)incomingJSON.get("target"), false);
+                }
+                default: {
+                    System.out.println("Invalid pdu type??");
+
+                    return null;
+                }
+            }
+        }
+    }
+
+
+    private PDU parse_get(String input) {
+        PDU parsedPDU = null;
+
+        String parts[] = input.split(" ");
+
+        switch (parts[1]) {
+            case "/userlist": {
+                System.out.println("send userlist: ");
+                return create_userlist_requeust_pdu("utter");
+            }
+
+        }
+        System.out.println("Received GET");
+        return parsedPDU;
+    }
+
+    private PDU parse_post(String input) {
+        PDU parsedPDU = null;
+
+        return parsedPDU;
+    }
 
     public PDU parse_pdu(String input) {
 
+        System.out.println("Input: " + input);
+
+        String parts[] = input.split(" ");
+
+        switch (parts[0]) {
+            case "GET": {
+                return parse_get(input);
+            }
+            case "POST": {
+                return parse_post(input);
+            }
+            default: {
+                return parse_json(input);
+            }
+        }
+    }
+    /*
+    public PDU parse_pdu(String input) {
+
+        System.out.println("Input: " + input);
         String parts[] = input.split(";");
         if (parts.length == 0 || parts.length == 1) {
             System.out.println("Received unparseable pdu: " + input);
@@ -149,6 +278,7 @@ public class PduHandler {
             }
         }
     }
+    */
 
     public class PDU_MESSAGE extends PDU {
 
@@ -172,6 +302,18 @@ public class PduHandler {
         public String toString() {
             return type + ";" + sender + ";" + target + ";" + String.valueOf(isRead) + ";" + message;
         }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", type);
+            jsonObject.put("message", message);
+            jsonObject.put("sender", sender);
+            jsonObject.put("target", target);
+            jsonObject.put("isRead", isRead);
+
+            return jsonObject;
+        }
     }
 
     public class PDU_COMMAND extends PDU {
@@ -189,6 +331,15 @@ public class PduHandler {
         public String toString() {
             return type + ";" + sender + ";" + command;
         }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", type);
+            jsonObject.put("command", command);
+            jsonObject.put("sender", sender);
+            return jsonObject;
+        }
     }
 
     public class PDU_CHATINFO extends PDU {
@@ -203,6 +354,14 @@ public class PduHandler {
         @Override
         public String toString() {
             return type + ";" + chatPartner;
+        }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", type);
+            jsonObject.put("chatPartner", chatPartner);
+            return jsonObject;
         }
     }
 
@@ -226,6 +385,21 @@ public class PduHandler {
 
             return type + ";" + nrOfUsers + ";" + userlistString;
         }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", type);
+            jsonObject.put("nrOfUsers", nrOfUsers);
+
+            JSONArray jsonArray = new JSONArray();
+            for (String user : usernames) {
+                jsonArray.add(user);
+            }
+
+            jsonObject.put("userlist", jsonArray);
+            return jsonObject;
+        }
     }
 
     public class PDU_USERLIST_REQUEST extends PDU {
@@ -240,6 +414,14 @@ public class PduHandler {
         @Override
         public String toString() {
             return String.valueOf(USERLIST_REQUEST_PDU) + ";" + sender;
+        }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", type);
+            jsonObject.put("sender", sender);
+            return jsonObject;
         }
     }
 
@@ -256,6 +438,14 @@ public class PduHandler {
         public String toString() {
             return type + ";" + target;
         }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", type);
+            jsonObject.put("target", target);
+            return jsonObject;
+        }
     }
 
     public class PDU_IS_LEAVING extends PDU {
@@ -268,6 +458,14 @@ public class PduHandler {
         public String toString() {
             return type + "; null";
         }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", type);
+            return jsonObject;
+        }
+
     }
 
     public class PDU_LOGIN extends PDU {
@@ -283,6 +481,15 @@ public class PduHandler {
         @Override
         public String toString() {
             return type + ";" + username + ";" + password;
+        }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", type);
+            jsonObject.put("username", username);
+            jsonObject.put("password", password);
+            return jsonObject;
         }
     }
 
@@ -302,6 +509,16 @@ public class PduHandler {
         public String toString() {
             return type + ";" + username + ";" + email + ";" + password;
         }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", type);
+            jsonObject.put("username", username);
+            jsonObject.put("password", password);
+            jsonObject.put("email", email);
+            return jsonObject;
+        }
     }
 
     public class PDU_LOGIN_RESPONSE extends PDU {
@@ -316,6 +533,14 @@ public class PduHandler {
         public String toString() {
             return type + ";" + status;
         }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", type);
+            jsonObject.put("status", status);
+            return jsonObject;
+        }
     }
 
     public class PDU_CREATE_USER_RESPONSE extends PDU {
@@ -329,6 +554,14 @@ public class PduHandler {
         @Override
         public String toString() {
             return type + ";" + status;
+        }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", type);
+            jsonObject.put("status", status);
+            return jsonObject;
         }
     }
 
@@ -353,6 +586,17 @@ public class PduHandler {
         @Override
         public String toString() {
             return type + ";" + sender + ";" + target + ";" + String.valueOf(isRead) + ";" + imageData;
+        }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", type);
+            jsonObject.put("imageData", imageData);
+            jsonObject.put("sender", sender);
+            jsonObject.put("target", target);
+            jsonObject.put("isRead", isRead);
+            return jsonObject;
         }
     }
 }

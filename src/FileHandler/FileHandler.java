@@ -11,7 +11,7 @@ public class FileHandler {
 
 
     private static String getFileName(String username) {
-        return "chatlog_" + username + ".txt";
+        return "chatlog_" + username + ".json";
     }
 
     public static ArrayList<PduHandler.PDU_MESSAGE> getMessages(String username, String partnerUsername) {
@@ -48,7 +48,7 @@ public class FileHandler {
         try {
              writer = new BufferedWriter(new FileWriter(file, true));
 
-        writer.write(pdu.toString() + "\n");
+        writer.write(pdu.toJSON() + "\n");
         writer.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();

@@ -13,7 +13,7 @@ public class WebserverThread extends Thread {
 
         this.clientSocket = clientSocket;
         this.dir = dir;
-        webs = new Webs(dir);
+       // webs = new Webs(dir);
     }
 
     @Override
@@ -28,7 +28,7 @@ public class WebserverThread extends Thread {
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(clientSocket.getInputStream()));
 
-            webs.parseRequest(in.readLine(), out);
+            //webs.parseRequest(in.readLine(), out);
             out.close();
 
         } catch (IOException e) {

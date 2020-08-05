@@ -9,5 +9,9 @@ public class ServerMessageHandler extends MessageHandler {
         startIO(1, 10);
     }
 
+    public void sendHTTPResponse(PduHandler.PDU_RESOURCE_RESPONSE responsePDU) {
 
+        sendRawData(responsePDU.response.toHTTP());
+        closeThreads();
+    }
 }

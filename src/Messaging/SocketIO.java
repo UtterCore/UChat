@@ -20,7 +20,7 @@ public class SocketIO {
 
     public static void sendPDU(PrintWriter writer, PDU pdu) {
         //writer.print(pdu.toString());
-        System.out.println("Sending pdu: " + pdu.toJSON());
+        //System.out.println("Sending pdu: " + pdu.toJSON());
         writer.print(pdu.toJSON());
         writer.flush();
     }

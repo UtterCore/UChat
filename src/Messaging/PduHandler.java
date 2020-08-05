@@ -1,5 +1,6 @@
 package Messaging;
 
+import Server.Webserver.Response;
 import Server.Webserver.Webs;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -23,6 +24,8 @@ public class PduHandler {
     public static final int LOGIN_RESPONSE_PDU = 10;
     public static final int CREATE_USER_RESPONSE_PDU = 11;
     public static final int IMAGE_MESSAGE_PDU = 12;
+    public static final int RESOURCE_RESPONSE_PDU = 13;
+    public static final int RESOURCE_REQUEST_PDU = 14;
 
     private static PduHandler pduHandler = new PduHandler();
 
@@ -83,6 +86,13 @@ public class PduHandler {
 
     public PDU_IMAGE_MESSAGE create_img_msg_pdu(byte[] imageData, String sender, String target, boolean isRead) {
         return new PDU_IMAGE_MESSAGE(imageData, sender, target, isRead);
+    }
+
+    public PDU_RESOURCE_RESPONSE create_resource_response_pdu() {
+        return new PDU_RESOURCE_RESPONSE();
+    }
+    public PDU_RESOURCE_REQUEST create_resource_request_pdu(String resource) {
+        return new PDU_RESOURCE_REQUEST(resource);
     }
 
     private PDU parse_json(String input) {
@@ -169,19 +179,10 @@ public class PduHandler {
 
 
     private PDU parse_get(String input) {
-        PDU parsedPDU = null;
 
-        String parts[] = input.split(" ");
-
-        switch (parts[1]) {
-            case "/userlist": {
-                System.out.println("send userlist: ");
-                return create_userlist_requeust_pdu("utter");
-            }
-
-        }
         System.out.println("Received GET");
-        return parsedPDU;
+        String parts[] = input.split(" ");
+        return create_resource_request_pdu(input);
     }
 
     private PDU parse_post(String input) {
@@ -192,7 +193,7 @@ public class PduHandler {
 
     public PDU parse_pdu(String input) {
 
-        System.out.println("Input: " + input);
+        //System.out.println("Input: " + input);
 
         String parts[] = input.split(" ");
 
@@ -208,77 +209,6 @@ public class PduHandler {
             }
         }
     }
-    /*
-    public PDU parse_pdu(String input) {
-
-        System.out.println("Input: " + input);
-        String parts[] = input.split(";");
-        if (parts.length == 0 || parts.length == 1) {
-            System.out.println("Received unparseable pdu: " + input);
-            return null;
-        } else {
-
-            switch (Integer.parseInt(parts[0])) {
-                case MESSAGE_PDU: {
-
-                    return create_msg_pdu(parts[4], parts[1], parts[2], Boolean.parseBoolean(parts[3]));
-                }
-                case COMMAND_PDU: {
-                   // System.out.println("Command pdu found");
-                    return create_cmd_pdu(parts[2], parts[1]);
-                }
-                case CHATINFO_PDU: {
-
-                 //   System.out.println("ChatInfo pdu found");
-                    return create_chatinfo_pdu(parts[1]);
-                }
-
-                case USERLIST_PDU: {
-                    ArrayList<String> userlist = new ArrayList<>();
-
-                    for (int i = 2; i < parts.length; i++) {
-                        userlist.add(parts[i]);
-                    }
-
-                    return create_userlist_pdu(userlist);
-                }
-
-                case USERLIST_REQUEST_PDU: {
-
-                    return create_userlist_requeust_pdu(parts[1]);
-                }
-
-                case SET_TARGET_PDU: {
-
-                    return create_set_target_pdu(parts[1]);
-                }
-                case IS_LEAVING_PDU: {
-                    return create_is_leaving_pdu();
-                }
-                case LOGIN_REQUEST_PDU: {
-                    return create_login_pdu(parts[1], parts[2]);
-                }
-                case CREATE_USER_REQUEST_PDU: {
-                    return create_create_user_pdu(parts[1], parts[2], parts[3]);
-                }
-                case LOGIN_RESPONSE_PDU: {
-                    return create_login_response(Integer.parseInt(parts[1]));
-                }
-                case CREATE_USER_RESPONSE_PDU: {
-                    return create_cr_user_response(Integer.parseInt(parts[1]));
-                }
-                case IMAGE_MESSAGE_PDU: {
-                    return create_img_msg_pdu(parts[4].getBytes(), parts[1], parts[2], Boolean.parseBoolean(parts[3]));
-                }
-                default: {
-                    System.out.println("Invalid pdu type??");
-
-                    return null;
-                }
-            }
-        }
-    }
-    */
 
     public class PDU_MESSAGE extends PDU {
 
@@ -596,6 +526,51 @@ public class PduHandler {
             jsonObject.put("sender", sender);
             jsonObject.put("target", target);
             jsonObject.put("isRead", isRead);
+            return jsonObject;
+        }
+    }
+
+    public class PDU_RESOURCE_RESPONSE extends PDU {
+
+        public Response response;
+
+        public PDU_RESOURCE_RESPONSE() {
+            type = RESOURCE_RESPONSE_PDU;
+        }
+        @Override
+        public String toString() {
+            return super.toString();
+        }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("body", response.getBody());
+            return jsonObject;
+        }
+
+        public String toHTTP() {
+            return response.toHTTP();
+        }
+    }
+
+    public class PDU_RESOURCE_REQUEST extends PDU {
+
+        public String resource;
+
+        public PDU_RESOURCE_REQUEST(String resource) {
+            type = RESOURCE_REQUEST_PDU;
+            this.resource = resource;
+        }
+        @Override
+        public String toString() {
+            return super.toString();
+        }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("resource", resource);
             return jsonObject;
         }
     }

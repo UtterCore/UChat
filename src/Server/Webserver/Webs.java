@@ -5,11 +5,15 @@ import java.util.Scanner;
 
 public class Webs {
 
-    String dir;
+    private String dir = "./resources";
+    private static Webs webs = new Webs();
 
-    public Webs(String dir) {
-    this.dir = dir;
+    private Webs() {}
+
+    public static Webs getInstance() {
+        return webs;
     }
+
     private String parse(String text, String word, String regex) {
 
         String parts[];
@@ -36,6 +40,9 @@ public class Webs {
         }
     }
 
+    public String getResource(String request) {
+        return (parse(request, "GET", " "));
+    }
 
     private void sendResponse(Response response, PrintWriter out) {
 
@@ -114,14 +121,14 @@ public class Webs {
         }
         return headerFileType;
     }
-    public void parseRequest(String request, PrintWriter out) throws FileNotFoundException {
+    public Response parseRequest(String request) throws FileNotFoundException {
 
         System.out.println("Raw request: " + request);
         String resource = (parse(request, "GET", " "));
 
         if (resource == null) {
             System.out.println("Invalid request");
-            return;
+            return null;
         }
 
         if (resource.equals("/")) {
@@ -134,16 +141,19 @@ public class Webs {
 
         response.setFileType(determineFileType(resource));
         if (response.getFileType() == null) {
-            return;
+            return null;
         }
         setFileContent(resource, response);
 
 
+        return response;
+        /*
         if (response.getBody() == null) {
             sendResponse(response, out);
         } else {
             sendResponse(response, out);
         }
+        */
     }
 }
 

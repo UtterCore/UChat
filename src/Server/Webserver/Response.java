@@ -81,7 +81,7 @@ public class Response {
                         "Content-Type: " + getFileType() + "\r\n\r\n\r\n";
 
 
-        responseString += header + getBody() + "\n";
+        responseString += getBody() + "\n";
 
         return responseString;
     }

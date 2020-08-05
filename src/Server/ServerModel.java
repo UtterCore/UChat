@@ -6,6 +6,7 @@ import Server.Webserver.Webs;
 import User.User;
 import javafx.application.Platform;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -21,10 +22,12 @@ public class ServerModel {
     volatile private ArrayList<User> userList;
     volatile private ArrayList<ServerThread> serverThreads;
     private ServerSocket serverSocket;
+    private API api;
 
     public ServerModel() {
         userList = new ArrayList<>();
         serverThreads = new ArrayList<>();
+        api = new API(this);
     }
 
     public ArrayList<User> getUserList() {
@@ -285,6 +288,26 @@ public class ServerModel {
                             System.out.println("ERROR: No user with name: " +
                                     messagePDU.target + " in thread list");
                         }
+                        break;
+                    }
+                    case PduHandler.RESOURCE_REQUEST_PDU: {
+                        PduHandler.PDU_RESOURCE_REQUEST requestPDU = (PduHandler.PDU_RESOURCE_REQUEST)incomingPDU;
+
+                            PduHandler.PDU_RESOURCE_RESPONSE responsePDU = PduHandler.getInstance().create_resource_response_pdu();
+                            try {
+                                responsePDU.response = Webs.getInstance().parseRequest(requestPDU.resource);
+
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                            }
+
+                            if (responsePDU.response == null) {
+                                api.parseRequest(requestPDU.resource, this);
+                            } else {
+                                getSmh().sendHTTPResponse(responsePDU);
+                            }
+                            quit();
+
                         break;
                     }
                     default: {

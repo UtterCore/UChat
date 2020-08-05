@@ -78,7 +78,7 @@ public class ClientController {
         guifx.getChatSendImageButton().setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                //sendFile("./resources/hund.jpg", client.getChatPartner());
+                sendFile("./resources/hund.jpg", client.getChatPartner());
             }
         });
         guifx.getChatSubmitButton().setOnAction(submitChatEventHandler());
@@ -266,7 +266,7 @@ public class ClientController {
     }
 
     private void sendFile(String filename, String target) {
-       // client.sendFile(filename, target);
+        client.sendFile(filename, target);
     }
     private void handleMessage(PduHandler.PDU_MESSAGE messagePDU) {
 
@@ -411,14 +411,14 @@ public class ClientController {
                 PduHandler.PDU_IMAGE_MESSAGE imgPDU = (PduHandler.PDU_IMAGE_MESSAGE)pdu;
                 System.out.println("Received image!");
 
-                /*
+
                 try {
 
                     client.createNewImage(imgPDU.imageData);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                */
+
                 break;
             }
         }

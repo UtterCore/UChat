@@ -78,7 +78,7 @@ public class ClientController {
         guifx.getChatSendImageButton().setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                sendFile("./resources/hund.jpg", client.getChatPartner());
+                //sendFile("./resources/hund.jpg", client.getChatPartner());
             }
         });
         guifx.getChatSubmitButton().setOnAction(submitChatEventHandler());
@@ -173,7 +173,7 @@ public class ClientController {
 
         new Thread(() -> {
             //guifx.lockLoginScreen();
-            if (connectNew(enteredUsername, enteredEmail, enteredPassword)) {
+            if (connectNew(enteredUsername, enteredPassword, enteredEmail)) {
             } else {
                 Platform.runLater(() -> guifx.showConnectionError());
                 return;
@@ -253,8 +253,8 @@ public class ClientController {
         return (client.connectToChatServer(username, password, "localhost", PORT));
     }
 
-    private boolean connectNew(String username, String email, String password) {
-        return (client.connectToChatServer(username, email, password, "localhost", PORT));
+    private boolean connectNew(String username, String password, String email) {
+        return (client.connectToChatServer(username, password, email, "localhost", PORT));
     }
 
     private void sendMessage(String message, String target) {
@@ -380,7 +380,7 @@ public class ClientController {
             case PduHandler.CREATE_USER_RESPONSE_PDU: {
                 PduHandler.PDU_CREATE_USER_RESPONSE responsePDU = (PduHandler.PDU_CREATE_USER_RESPONSE)pdu;
 
-                if (responsePDU.status == GUIFX.LOGIN_SUCCESS) {
+                if (responsePDU.status == ErrorMessage.INPUT_OK.getMessageId()) {
                     System.out.println("Create success!!!");
 
 

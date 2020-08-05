@@ -80,7 +80,6 @@ public class PduHandler {
     }
 
     public PDU_CREATE_USER_RESPONSE create_cr_user_response(int status) {
-        System.out.println("creating user response: " + status);
         return new PDU_CREATE_USER_RESPONSE(status);
     }
 
@@ -163,7 +162,7 @@ public class PduHandler {
                     return create_login_response(Integer.parseInt("" + incomingJSON.get("status")));
                 }
                 case CREATE_USER_RESPONSE_PDU: {
-                    return create_cr_user_response((int)incomingJSON.get("status"));
+                    return create_cr_user_response(Integer.parseInt("" + incomingJSON.get("status")));
                 }
                 case IMAGE_MESSAGE_PDU: {
                     return create_img_msg_pdu(((String)incomingJSON.get("imageData")).getBytes(), (String)incomingJSON.get("sender"), (String)incomingJSON.get("target"), false);

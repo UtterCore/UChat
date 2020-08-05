@@ -92,7 +92,6 @@ public abstract class MessageHandler {
 
             if (input != null) {
                 PDU incomingPDU = PduHandler.getInstance().parse_pdu(input);
-              ///  System.out.println("Incoming pdu: " + incomingPDU.toString());
                 incomingQueue.add(incomingPDU);
             }
         }

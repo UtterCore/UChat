@@ -1,21 +1,12 @@
 package Server;
 
 import Messaging.*;
-import Server.Webserver.Response;
-import Server.Webserver.Webs;
 import User.User;
-import javafx.application.Platform;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class ServerModel {
 
@@ -30,6 +21,10 @@ public class ServerModel {
         api = new API(this);
     }
 
+    public ArrayList<User> getAllUsers() {
+
+        return UserJSONHandler.getAllUsers();
+    }
     public ArrayList<User> getUserList() {
         return userList;
     }
@@ -144,16 +139,6 @@ public class ServerModel {
 
         private void sendUserListPDU() {
 
-            /*
-            Response response = new Response();
-            response.setStatus("200 OK");
-            response.setFileType("text/html");
-            response.setBody("<html><head></head><body><h1>Hej!</h1></body></html>");
-            response.setLength(response.getBody().length());
-            smh.sendRawData(response.toHTTP());
-
-            System.out.println("Sending: " + response.toHTTP());
-            */
             ArrayList<String> userlistString = new ArrayList<>();
             for (User user : userList) {
                 userlistString.add(user.getFullName());
@@ -241,7 +226,7 @@ public class ServerModel {
             }
         }
 
-        void handleInput(PDU incomingPDU) throws IllegalArgumentException {
+        public void handleInput(PDU incomingPDU) throws IllegalArgumentException {
 
             if (incomingPDU == null) {
                 return;
@@ -293,20 +278,17 @@ public class ServerModel {
                     case PduHandler.RESOURCE_REQUEST_PDU: {
                         PduHandler.PDU_RESOURCE_REQUEST requestPDU = (PduHandler.PDU_RESOURCE_REQUEST)incomingPDU;
 
-                            PduHandler.PDU_RESOURCE_RESPONSE responsePDU = PduHandler.getInstance().create_resource_response_pdu();
-                            try {
-                                responsePDU.response = Webs.getInstance().parseRequest(requestPDU.resource);
+                        api.handleRequest(requestPDU.resource, this);
+                        quit();
 
-                            } catch (FileNotFoundException e) {
-                                e.printStackTrace();
-                            }
+                        break;
+                    }
 
-                            if (responsePDU.response == null) {
-                                api.parseRequest(requestPDU.resource, this);
-                            } else {
-                                getSmh().sendHTTPResponse(responsePDU);
-                            }
-                            quit();
+                    case PduHandler.POST_PDU: {
+                        PduHandler.PDU_POST postPDU = (PduHandler.PDU_POST)incomingPDU;
+
+                        api.handleRequest(postPDU.request, this);
+                        quit();
 
                         break;
                     }

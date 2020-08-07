@@ -19,6 +19,10 @@ public class Response {
 
     }
 
+    private void create404() {
+
+    }
+
     public long getLength() {
         return length;
     }

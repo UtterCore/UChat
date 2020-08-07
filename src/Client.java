@@ -8,6 +8,7 @@ import java.io.IOException;
 
         /*
         TODO: IMG: Change all (or some) PDUs to JSON to be able to send files (yikes)
+        TODO: Find out why the CPU goes to 100 when serving to a few http clients
 
         TODO: Timeout for server threads (if a user crashes etc)
         TODO: Unread message indicator

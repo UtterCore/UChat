@@ -26,6 +26,7 @@ public class PduHandler {
     public static final int IMAGE_MESSAGE_PDU = 12;
     public static final int RESOURCE_RESPONSE_PDU = 13;
     public static final int RESOURCE_REQUEST_PDU = 14;
+    public static final int POST_PDU = 15;
 
     private static PduHandler pduHandler = new PduHandler();
 
@@ -94,6 +95,10 @@ public class PduHandler {
         return new PDU_RESOURCE_REQUEST(resource);
     }
 
+    public PDU_POST create_post_pdu(String request) {
+        return new PDU_POST(request);
+    }
+
     private PDU parse_json(String input) {
 
         JSONParser parser = new JSONParser();
@@ -124,7 +129,7 @@ public class PduHandler {
                 }
                 case CHATINFO_PDU: {
 
-                    //   System.out.println("ChatInfo pdu found");
+                       System.out.println("ChatInfo pdu found");
                     return create_chatinfo_pdu((String)incomingJSON.get("chatPartner"));
                 }
 
@@ -179,20 +184,17 @@ public class PduHandler {
 
     private PDU parse_get(String input) {
 
-        System.out.println("Received GET");
+        //System.out.println("Received GET");
         String parts[] = input.split(" ");
         return create_resource_request_pdu(input);
     }
 
     private PDU parse_post(String input) {
-        PDU parsedPDU = null;
 
-        return parsedPDU;
+        return create_post_pdu(input);
     }
 
     public PDU parse_pdu(String input) {
-
-        //System.out.println("Input: " + input);
 
         String parts[] = input.split(" ");
 
@@ -570,6 +572,27 @@ public class PduHandler {
         public JSONObject toJSON() {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("resource", resource);
+            return jsonObject;
+        }
+    }
+
+    public class PDU_POST extends PDU {
+
+        public String request;
+
+        public PDU_POST(String request) {
+            type = POST_PDU;
+            this.request = request;
+        }
+        @Override
+        public String toString() {
+            return super.toString();
+        }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("request", request);
             return jsonObject;
         }
     }

@@ -6,6 +6,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
+import java.util.ArrayList;
 
 public class UserJSONHandler {
 
@@ -110,6 +111,32 @@ public class UserJSONHandler {
         }
 
         return null;
+    }
+
+    public static ArrayList<User> getAllUsers() {
+
+        ArrayList<User> userList = new ArrayList<User>();
+
+        if (!fileExists("users/user.json")) {
+            return null;
+        }
+        JSONParser parser = new JSONParser();
+        Object o = null;
+        try {
+            o = parser.parse(new FileReader("users/user.json"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        JSONArray ja = (JSONArray) o;
+
+        for (int i = 0; i < ja.size(); i++) {
+            JSONObject user = (JSONObject)ja.get(i);
+            userList.add(new User((String)user.get("username"), (String)user.get("email"), (String)user.get("password")));
+        }
+
+        return userList;
     }
 
 }

@@ -27,9 +27,12 @@ public class Webs {
         return null;
     }
 
+    public boolean isWebpage(String resource) {
+        return (determineFileType(resource) != null);
+    }
     private String parse(String text, String regex) {
 
-        System.out.println("Parsing: " + text);
+       // System.out.println("Parsing: " + text);
         String parts[];
         parts = text.split(regex);
 
@@ -114,6 +117,10 @@ public class Webs {
                 headerFileType = "text/html";
                 break;
             }
+            case ("js"): {
+                headerFileType = "text/html";
+                break;
+            }
             default: {
                 headerFileType = null;
                 break;
@@ -121,10 +128,9 @@ public class Webs {
         }
         return headerFileType;
     }
-    public Response parseRequest(String request) throws FileNotFoundException {
 
-        System.out.println("Raw request: " + request);
-        String resource = (parse(request, "GET", " "));
+    public Response parseResource(String resource) throws FileNotFoundException {
+
 
         if (resource == null) {
             System.out.println("Invalid request");
@@ -135,7 +141,7 @@ public class Webs {
             resource = "/index.html";
         }
 
-        System.out.println("Received request: " + resource);
+       // System.out.println("Received request: " + resource);
 
         Response response = new Response();
 
@@ -145,15 +151,16 @@ public class Webs {
         }
         setFileContent(resource, response);
 
+        return response;
+    }
+    public Response parseRequest(String request) throws FileNotFoundException {
+
+        //System.out.println("Raw request: " + request);
+        String resource = (parse(request, "GET", " "));
+
+        Response response = parseResource(resource);
 
         return response;
-        /*
-        if (response.getBody() == null) {
-            sendResponse(response, out);
-        } else {
-            sendResponse(response, out);
-        }
-        */
     }
 }
 

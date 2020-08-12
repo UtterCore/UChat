@@ -29,4 +29,16 @@ public class SocketIO {
         writer.print(data);
         writer.flush();
     }
+
+    public static void sendRaw(PrintWriter writer, String data) {
+        writer.print(data);
+    }
+
+    public static void sendRaw(PrintWriter writer, byte[] data) {
+        writer.print(data);
+    }
+
+    public static void flushWriter(PrintWriter writer) {
+        writer.flush();
+    }
 }

@@ -245,6 +245,8 @@ public class ServerModel {
                         break;
                     }
                     case PduHandler.USERLIST_REQUEST_PDU: {
+
+                        //TODO: send list containing the friends of the sender
                         sendUserListPDU();
                         break;
                     }
@@ -280,7 +282,7 @@ public class ServerModel {
 
                         api.handleRequest(requestPDU.resource, this);
                         quit();
-
+                        exit = true;
                         break;
                     }
 

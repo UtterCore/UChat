@@ -1,11 +1,15 @@
 package Server;
 
 import Messaging.PduHandler;
+import Messaging.SocketIO;
 import Server.Webserver.Response;
 import Server.Webserver.Webs;
 import User.User;
 
+import javax.imageio.ImageIO;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.net.Socket;
 import java.util.ArrayList;
 
 public class API {
@@ -42,12 +46,13 @@ public class API {
                                 userlistString.add(user.getFullName());
                             }
 
-                            responsePDU.response = new Response();
-                            responsePDU.response.setStatus("200 OK");
-                            responsePDU.response.setFileType("application/json");
-                            responsePDU.response.setBody(PduHandler.getInstance().create_userlist_pdu(userlistString).toJSON().toString());
-                            responsePDU.response.setLength(model.getUserListString().length());
-
+                            if (thread.getUser() != null) { // TODO: friend list here later
+                                thread.handleInput(PduHandler.getInstance().create_userlist_requeust_pdu(thread.getUser().getFullName()));
+                            } else {
+                                System.out.println("Not allowed");
+                                thread.handleInput(PduHandler.getInstance().create_userlist_requeust_pdu(null));
+                                return;
+                            }
                             break;
                         }
 

@@ -1,12 +1,17 @@
 package Server.Webserver;
 
+import java.awt.image.BufferedImage;
+
 public class Response {
 
     private long length;
     private String header;
     private String body;
+    private byte[] bodyBytes;
     private String fileType;
     private String status;
+    private BufferedImage image;
+    private String shortFileType;
 
     public Response(String header, String body, String fileType, long length) {
         this.header = header;
@@ -21,6 +26,22 @@ public class Response {
 
     private void create404() {
 
+    }
+
+    public String getShortFileType() {
+        return shortFileType;
+    }
+
+    public void setShortFileType(String shortFileType) {
+        this.shortFileType = shortFileType;
+    }
+
+    public void setImage(BufferedImage image) {
+        this.image = image;
+    }
+
+    public BufferedImage getImage() {
+        return image;
     }
 
     public long getLength() {
@@ -43,8 +64,16 @@ public class Response {
         return body;
     }
 
+    public byte[] getBodyBytes() {
+        return bodyBytes;
+    }
+
     public void setBody(String body) {
         this.body = body;
+    }
+
+    public void setBody(byte[] bytes) {
+        this.bodyBytes = bytes;
     }
 
     public String getFileType() {
@@ -63,11 +92,20 @@ public class Response {
         this.status = status;
     }
 
+    public String getHTTPHeader() {
+        String responseString = "";
+        responseString +=
+                "HTTP/1.0 " + getStatus() + "\r\n" +
+                        "Content-Length: " + getLength() + "\n" +
+                        "Content-Type: " + getFileType() + "\r\n\r\n";
+
+        return responseString;
+    }
     @Override
     public String toString() {
         String responseString = "";
         responseString +=
-                "HTTP/1.0 " + getStatus() + "\r\n " +
+                "HTTP/1.0 " + getStatus() + "\r\n" +
                         "Content-Length: " + getLength() + "\n" +
                         "Content-Type: " + getFileType() + "\r\n\r\n\r\n";
 
@@ -80,12 +118,12 @@ public class Response {
     public String toHTTP() {
         String responseString = "";
         responseString +=
-                "HTTP/1.0 " + getStatus() + "\r\n " +
+                "HTTP/1.0 " + getStatus() + "\r\n" +
                         "Content-Length: " + getLength() + "\n" +
-                        "Content-Type: " + getFileType() + "\r\n\r\n\r\n";
+                        "Content-Type: " + getFileType() + "\r\n\r\n";
 
 
-        responseString += getBody() + "\n";
+        responseString += getBody();
 
         return responseString;
     }

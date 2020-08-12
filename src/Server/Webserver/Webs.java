@@ -1,5 +1,7 @@
 package Server.Webserver;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Scanner;
 
@@ -72,43 +74,48 @@ public class Webs {
 
         response.setLength(file.length());
 
-        String output = "";
-
-        if (response.getFileType().equals("image/jpeg")) {
-            System.out.println("Jpg");
-            FileReader reader = new FileReader(file);
-            char[] image = new char[(int) response.getLength()];
+        if (response.getFileType().equals("image/png")
+                || response.getFileType().equals("image/jpeg")) {
             try {
-                reader.read(image);
+
+                BufferedImage image = ImageIO.read(file);
+
+                response.setLength(file.length() * 100);
+                response.setImage(image);
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            output = image.toString();
+
         } else {
 
+
+            String output = "";
             Scanner scanner = new Scanner(file);
-
-
-            while (scanner.hasNextByte()) {
-                System.out.println("BYTE");
-            }
 
             while (scanner.hasNextLine()) {
                 output += scanner.nextLine();
             }
+
+
+            response.setBody(output);
         }
 
-        response.setBody(output);
     }
 
     private String determineFileType(String resource) {
         String fileType = parse(resource, "\\.");
+
 
         if (fileType == null) {
             return null;
         }
         String headerFileType;
         switch (fileType) {
+            case ("png"): {
+                headerFileType = "image/png";
+                break;
+            }
             case ("jpg"): {
                 headerFileType = "image/jpeg";
                 break;
@@ -119,6 +126,18 @@ public class Webs {
             }
             case ("js"): {
                 headerFileType = "text/html";
+                break;
+            }
+            case ("css"): {
+                headerFileType = "text/html";
+                break;
+            }
+            case ("zip"): {
+                headerFileType = "application/zip";
+                break;
+            }
+            case ("jar"): {
+                headerFileType = "application/octet-stream";
                 break;
             }
             default: {
@@ -141,11 +160,10 @@ public class Webs {
             resource = "/index.html";
         }
 
-       // System.out.println("Received request: " + resource);
-
         Response response = new Response();
 
         response.setFileType(determineFileType(resource));
+
         if (response.getFileType() == null) {
             return null;
         }

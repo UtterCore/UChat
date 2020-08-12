@@ -25,6 +25,10 @@ public abstract class MessageHandler {
         incomingQueue = new LinkedList<>();
     }
 
+    public Socket getSocket() {
+        return socket;
+    }
+
     public PrintWriter getWriter() {
         return writer;
     }
@@ -74,6 +78,12 @@ public abstract class MessageHandler {
     public void sendRawData(String data) {
         SocketIO.sendData(writer, data);
     }
+
+    public void sendRawData(byte[] data) {
+        SocketIO.sendRaw(writer, data);
+        SocketIO.flushWriter(writer);
+    }
+
     public void sendAndClose(PDU pdu) {
         SocketIO.sendPDU(writer, pdu);
         closeThreads();
